@@ -13,8 +13,11 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddBlazorFluentUI();
 builder.Services.AddMsalAuthentication(options =>
 {
-    builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
+    builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
     options.ProviderOptions.DefaultAccessTokenScopes.Add("https://lunarcommand.onmicrosoft.com/console-log/Log.Read");
+    options.ProviderOptions.DefaultAccessTokenScopes.Add("openid");
+    options.ProviderOptions.DefaultAccessTokenScopes.Add("offline_access");
+    options.ProviderOptions.LoginMode = "redirect";
 });
 
 await builder.Build().RunAsync();
