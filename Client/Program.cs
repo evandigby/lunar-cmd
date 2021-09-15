@@ -1,5 +1,5 @@
 using BlazorFluentUI;
-using client;
+using Client;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
