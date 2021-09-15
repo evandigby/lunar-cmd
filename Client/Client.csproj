@@ -20,4 +20,8 @@
     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="6.0.0-preview.7.21378.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Microsoft.Authentication.WebAssembly.Msal" />
+  </ItemGroup>
+  
 </Project>
