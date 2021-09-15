@@ -2,6 +2,12 @@
   "profiles": {
     "api": {
       "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "httpPort": 31317,
+      "useSSL": false
     }
   }
 }
