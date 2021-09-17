@@ -1,6 +1,7 @@
 using BlazorFluentUI;
 using Client;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -9,7 +10,17 @@ using System.Net.Http;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress) });
+builder.Services
+    .AddHttpClient("Client.ServerAPI", client => client.BaseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress))
+    .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
+
+builder.Services
+    .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>()
+    .CreateClient("Client.ServerAPI"));
+
+builder.Services.AddScoped(sp => new HttpClient { 
+    BaseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress),
+});
 builder.Services.AddBlazorFluentUI();
 builder.Services.AddMsalAuthentication(options =>
 {

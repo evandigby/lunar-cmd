@@ -1,0 +1,46 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Data.Commands
+@using System.Threading
+@inject HttpClient client;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+
+<Stack VerticalFill VerticalAlign="Alignment.End">
+    <Stack VerticalFill VerticalAlign="Alignment.End" Style="border: 1px solid red;">
+
+    </Stack>
+    <form @onsubmit=Enter>
+        <Stack Style="border: 1px solid blue;" Horizontal>
+            <StackItem Grow=1>
+                <TextField @bind-Value=currentValue />
+            </StackItem>
+            <DefaultButton Text="Send" />
+        </Stack>
+    </form>
+</Stack>
+
+@code {
+    private string currentValue = "";
+
+    private async Task Enter()
+    {
+        var cmd = new AppendLogItemCommand(await GetUserID(), new PlaintextPayloadValue
+            {
+                Value = currentValue
+            });
+
+        var src = new CancellationTokenSource();
+        await client.PostAsJsonAsync("/api/command", cmd, src.Token);
+        currentValue = "";
+    }
+
+    private async Task<Guid> GetUserID()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        var uid = authState.User.Claims.FirstOrDefault(c => c.Type == "oid")?.Value;
+
+        return !string.IsNullOrWhiteSpace(uid) ? Guid.Parse(uid) : Guid.Empty;
+    }
+}

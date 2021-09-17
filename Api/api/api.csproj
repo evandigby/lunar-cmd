@@ -6,7 +6,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Web" Version="1.16.1" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.13" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.11.1" />
+    <PackageReference Include="System.Text.Json" Version="6.0.0-rc.1.21451.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Data\Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
