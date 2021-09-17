@@ -17,7 +17,6 @@ namespace api
     {
         private static readonly JsonSerializerOptions options = new(JsonSerializerDefaults.Web);
 
-        [Authorize]
         [FunctionName("SendCommand")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "command")] HttpRequest req,
