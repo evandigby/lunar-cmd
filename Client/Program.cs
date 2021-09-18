@@ -10,18 +10,6 @@ using System.Net.Http;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 
-builder.Services
-    .AddHttpClient("Client.ServerAPI", client => client.BaseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress))
-    .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
-
-builder.Services
-    .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>()
-    .CreateClient("Client.ServerAPI"));
-
-builder.Services.AddScoped(sp => new HttpClient { 
-    BaseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress),
-});
-builder.Services.AddBlazorFluentUI();
 builder.Services.AddMsalAuthentication(options =>
 {
     builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
@@ -30,5 +18,16 @@ builder.Services.AddMsalAuthentication(options =>
     options.ProviderOptions.DefaultAccessTokenScopes.Add("offline_access");
     options.ProviderOptions.LoginMode = "redirect";
 });
+
+builder.Services.AddScoped<CustomAuthorizationMessageHandler>();
+
+builder.Services
+    .AddHttpClient("Client.ServerAPI", client => client.BaseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress))
+    .AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
+
+builder.Services.AddScoped(sp => new HttpClient { 
+    BaseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress),
+});
+builder.Services.AddBlazorFluentUI();
 
 await builder.Build().RunAsync();
