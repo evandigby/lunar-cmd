@@ -41,7 +41,7 @@
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
-        var uid = authState.User.Claims.FirstOrDefault(c => c.Type == "oid")?.Value;
+        var uid = authState?.User?.Claims?.FirstOrDefault(c => c.Type == "oid")?.Value;
 
         return !string.IsNullOrWhiteSpace(uid) ? Guid.Parse(uid) : Guid.Empty;
     }

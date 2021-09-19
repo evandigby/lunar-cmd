@@ -1,12 +1,29 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": [ "/images/*.{png,jpg,gif}", "/css/*" ]
+    "exclude": [
+      "/images/*.{png,jpg,gif}",
+      "/css/*"
+    ]
   },
   "routes": [
     {
       "route": "/api/*",
-      "allowedRoles": [ "authenticated" ]
+      "allowedRoles": [
+        "authenticated"
+      ]
     }
-  ]
+  ],
+  "auth": {
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "openIdIssuer": "https://login.microsoftonline.com/a4d31d01-f721-4605-8831-34490dc0b8f5",
+          "clientIdSettingName": "AADClientID",
+          "clientSecretSettingName": "AADSecret"
+        },
+        "userDetailsClaim": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+      }
+    }
+  }
 }
