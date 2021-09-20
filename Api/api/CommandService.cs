@@ -10,6 +10,7 @@ using System.Text.Json;
 using Data.Commands;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using System.Text;
 
 namespace api
 {
@@ -46,8 +47,9 @@ namespace api
                 log.LogError(ex.Message);
             }
 
+            var clientPrincipal = Auth.Parse(req);
 
-            return new OkObjectResult("");
+            return new JsonResult(clientPrincipal, new JsonSerializerOptions {  WriteIndented = true });
         }
     }
 }

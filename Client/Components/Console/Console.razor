@@ -1,14 +1,11 @@
-﻿@using System.Security.Claims
-@using Data.Commands
-@using System.Threading
-@inject HttpClient http
+﻿@inject HttpClient http
 
 <Stack VerticalFill VerticalAlign="Alignment.End">
-    <Stack VerticalFill VerticalAlign="Alignment.End" Style="border: 1px solid red;">
+    <Stack VerticalFill VerticalAlign="Alignment.End">
 
     </Stack>
     <form @onsubmit=Enter>
-        <Stack Style="border: 1px solid blue;" Horizontal>
+        <Stack Horizontal>
             <StackItem Grow=1>
                 <TextField @bind-Value=currentValue />
             </StackItem>
@@ -22,10 +19,13 @@
 
     private async Task Enter()
     {
-        var cmd = new AppendLogItemCommand(Guid.NewGuid(), new PlaintextPayloadValue
+        var cmd = new AppendLogItemCommand
+        {
+            Payload = new PlaintextPayloadValue
             {
                 Value = currentValue
-            });
+            }
+        };
 
         var src = new CancellationTokenSource();
         await http.PostAsJsonAsync("/api/command", cmd, src.Token);

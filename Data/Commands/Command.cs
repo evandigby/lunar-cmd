@@ -19,12 +19,9 @@ namespace Data.Commands
         public abstract CommandType CommandType { get; }
         public CommandPayload Payload { get; set; }
 
-        public Command() { } 
-
-        public Command(Guid userId)
+        public Command()
         {
             Id = Guid.NewGuid();
-            UserID = userId;
             CreatedAt = DateTime.UtcNow;
         }
     }
