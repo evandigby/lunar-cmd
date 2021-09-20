@@ -1,10 +1,7 @@
 ﻿@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
 @using Data.Commands
 @using System.Threading
-@inject IHttpClientFactory ClientFactory
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@attribute [Authorize]
+@inject HttpClient http
 
 <Stack VerticalFill VerticalAlign="Alignment.End">
     <Stack VerticalFill VerticalAlign="Alignment.End" Style="border: 1px solid red;">
@@ -25,24 +22,13 @@
 
     private async Task Enter()
     {
-        var cmd = new AppendLogItemCommand(await GetUserID(), new PlaintextPayloadValue
+        var cmd = new AppendLogItemCommand(Guid.NewGuid(), new PlaintextPayloadValue
             {
                 Value = currentValue
             });
 
-        var client = ClientFactory.CreateClient("Client.ServerAPI");
-
         var src = new CancellationTokenSource();
-        await client.PostAsJsonAsync("/api/command", cmd, src.Token);
+        await http.PostAsJsonAsync("/api/command", cmd, src.Token);
         currentValue = "";
-    }
-
-    private async Task<Guid> GetUserID()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-
-        var uid = authState?.User?.Claims?.FirstOrDefault(c => c.Type == "oid")?.Value;
-
-        return !string.IsNullOrWhiteSpace(uid) ? Guid.Parse(uid) : Guid.Empty;
     }
 }
