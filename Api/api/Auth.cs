@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -20,6 +21,12 @@ namespace api
                 var decoded = Convert.FromBase64String(data);
                 var json = Encoding.UTF8.GetString(decoded);
                 principal = JsonSerializer.Deserialize<ClientPrincipal>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            } 
+            else if (Guid.TryParse(Environment.GetEnvironmentVariable("LocalUserId"), out Guid envUserId))
+            {
+                principal.UserId = envUserId.ToString();
+                principal.UserRoles = (Environment.GetEnvironmentVariable("LocalUserRoles") ?? "").Split(",");
+                principal.UserDetails = Environment.GetEnvironmentVariable("LocalUserDetails");
             }
 
             principal.UserRoles = principal.UserRoles?.Except(new string[] { "anonymous" }, StringComparer.CurrentCultureIgnoreCase);

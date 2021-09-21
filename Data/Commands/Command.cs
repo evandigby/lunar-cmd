@@ -11,8 +11,9 @@ namespace Data.Commands
     [JsonConverter(typeof(CommandConverter))]
     public abstract class Command
     {
+        public Guid MissionId {  get; set; }
         public Guid Id { get; set; }
-        public Guid UserID { get; set; }
+        public Guid UserId { get; set; }
         public string Name { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime ReceivedAt { get; set; }

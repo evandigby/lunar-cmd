@@ -11,45 +11,88 @@ using Data.Commands;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Configuration;
+using Azure.Messaging.EventHubs.Producer;
+using System.Linq;
+using System.Threading;
+using Azure.Messaging.EventHubs;
 
 namespace api
 {
     public static class CommandService
     {
-        private static readonly JsonSerializerOptions options = new(JsonSerializerDefaults.Web);
+        private static readonly Lazy<EventHubProducerClient> producerClient = new Lazy<EventHubProducerClient>(InitializeProducerClient);
+
+        private static EventHubProducerClient InitializeProducerClient()
+        {
+            var eventHubsConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings:EventHubs");
+            var eventHubName = Environment.GetEnvironmentVariable("EventHubName");
+
+            return new EventHubProducerClient(eventHubsConnectionString, eventHubName);
+        }
 
         [FunctionName("SendCommand")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "command")] HttpRequest req,
-            ILogger log)
+            ILogger log,
+            CancellationToken cancellationToken)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, req.HttpContext.RequestAborted);
 
-            var json = await req.ReadAsStringAsync();
+            Guid userId;
 
             try
             {
-                var command = JsonSerializer.Deserialize<Command>(json, options);
+                var clientPrincipal = Auth.Parse(req);
 
-                log.LogInformation($"Received {command.Name} command from {command.UserID}");
+                var nameIdentifier = clientPrincipal.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).SingleOrDefault();
 
-                if (command is AppendLogItemCommand appendLogItemCommand)
+                if (!Guid.TryParse(nameIdentifier?.Value, out userId))
                 {
-                    log.LogInformation("Received append log item command");
-                    if (appendLogItemCommand.Payload is PlaintextPayloadValue plaintextPayloadValue)
-                    {
-                        log.LogInformation($"Recieved plaintext payload: {plaintextPayloadValue.Value}");
-                    }
+                    throw new Exception("invalid user");
                 }
+            } 
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(ex);
+            }
+
+            Command command;
+            try
+            {
+                command = await Util.DeserializeAsync<Command>(req.Body, cancellationSource.Token);
+                command.UserId = userId;
+                command.ReceivedAt = DateTime.UtcNow;
+
+                log.LogInformation($"Received {command.Name} command from {command.UserId}");
             }
             catch (Exception ex)
             {
-                log.LogError(ex.Message);
+                return new BadRequestObjectResult(ex);
             }
 
-            var clientPrincipal = Auth.Parse(req);
+            try
+            {
+                using EventDataBatch batch = await producerClient.Value.CreateBatchAsync(cancellationSource.Token);
 
-            return new JsonResult(clientPrincipal, new JsonSerializerOptions {  WriteIndented = true });
+                var updatedCommand = Util.Serialize(command);
+
+                if (!batch.TryAdd(new EventData(updatedCommand)))
+                {
+                    throw new Exception("unable to add updated command");
+                }
+
+                await producerClient.Value.SendAsync(batch, cancellationSource.Token);
+            }
+            catch (Exception ex)
+            {
+                return new ObjectResult(ex)
+                {
+                    StatusCode = StatusCodes.Status502BadGateway
+                };
+            }
+
+            return new AcceptedResult();
         }
     }
 }
