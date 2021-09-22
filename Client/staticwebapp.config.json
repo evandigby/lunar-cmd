@@ -12,15 +12,20 @@
       "allowedRoles": [ "anonymous" ]
     },
     {
-      "route": "/*",
+      "route": "/api/*",
       "allowedRoles": [
         "authenticated"
       ]
+    },
+    {
+      "route": "/login",
+      "allowedRoles": [ "anonymous" ],
+      "redirect": "/.auth/login"
     }
   ],
   "responseOverrides": {
     "401": {
-      "redirect": "/.auth/login/aad",
+      "redirect": "/.auth/login",
       "statusCode": 302,
       "exclude":  ["/api/*"]
     }
