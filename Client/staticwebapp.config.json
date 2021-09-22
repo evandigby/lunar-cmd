@@ -10,6 +10,10 @@
     {
       "route": "/*",
       "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/.auth/*",
+      "allowedRoles": [ "anonymous" ]
     }
   ],
   "responseOverrides": {
