@@ -20,16 +20,5 @@
       "statusCode": 302,
       "exclude":  ["/api/*"]
     }
-  },
-  "auth": {
-    "identityProviders": {
-      "azureActiveDirectory": {
-        "registration": {
-          "openIdIssuer": "https://login.microsoftonline.com/lunarcommand.onmicrosoft.com/v2.0",
-          "clientIdSettingName": "AADClientID",
-          "clientSecretSettingName": "AADSecret"
-        }
-      }
-    }
   }
 }
