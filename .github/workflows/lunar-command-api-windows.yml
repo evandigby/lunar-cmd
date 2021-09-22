@@ -5,10 +5,10 @@ on:
     - main
 env:
   AZURE_FUNCTIONAPP_NAME: lunar-command-api-windows
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: Api\api\published
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: Api\published
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 6.0.x
-  WORKING_DIRECTORY: Api\api
+  WORKING_DIRECTORY: Api
   DOTNET_CORE_VERSION_INPROC: ''
 jobs:
   build-and-deploy:
