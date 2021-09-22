@@ -6,23 +6,6 @@
       "/css/*"
     ]
   },
-  "routes": [
-    {
-      "route": "/.auth/*",
-      "allowedRoles": [ "anonymous" ]
-    },
-    {
-      "route": "/api/*",
-      "allowedRoles": [
-        "authenticated"
-      ]
-    },
-    {
-      "route": "/login",
-      "allowedRoles": [ "anonymous" ],
-      "redirect": "/.auth/login"
-    }
-  ],
   "responseOverrides": {
     "401": {
       "redirect": "/.auth/login",
