@@ -13,12 +13,12 @@
     },
     {
       "route": "/*",
-      "allowedRoles": [ "authenticated" ]
+      "allowedRoles": [ "authenticated" ],
     }
   ],
   "responseOverrides": {
     "401": {
-      "redirect": "/.auth/login",
+      "redirect": "/.auth/login/aad",
       "statusCode": 302,
       "exclude":  ["/api/*"]
     }
