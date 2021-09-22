@@ -1,4 +1,5 @@
 ﻿using Data.Commands;
+using Data.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,23 +13,21 @@ namespace api
 {
     public class Util
     {
-        private static readonly JsonSerializerOptions jsonOptions = new(JsonSerializerDefaults.Web);
-
         public static string PartitionKey()
         {
-            return jsonOptions.PropertyNamingPolicy?.ConvertName(nameof(Command.UserId)) ?? nameof(Command.UserId);
+            return ConverterOptions.JsonSerializerOptions.PropertyNamingPolicy?.ConvertName(nameof(Command.UserId)) ?? nameof(Command.UserId);
         }
 
         public static string Serialize<T>(T item)
         {
-            return JsonSerializer.Serialize(item, jsonOptions);
+            return JsonSerializer.Serialize(item, ConverterOptions.JsonSerializerOptions);
         }
 
         public static Stream SerializeToStream<T>(T item)
         {
             var memStream = new MemoryStream();
 
-            JsonSerializer.Serialize(memStream, item, jsonOptions);
+            JsonSerializer.Serialize(memStream, item, ConverterOptions.JsonSerializerOptions);
 
             memStream.Position = 0;
             return memStream;
@@ -36,17 +35,17 @@ namespace api
 
         public static T Deserialize<T>(string message)
         {
-            return JsonSerializer.Deserialize<T>(message, jsonOptions);
+            return JsonSerializer.Deserialize<T>(message, ConverterOptions.JsonSerializerOptions);
         }
 
         public static T Deserialize<T>(Stream message)
         {
-            return JsonSerializer.Deserialize<T>(message, jsonOptions);
+            return JsonSerializer.Deserialize<T>(message, ConverterOptions.JsonSerializerOptions);
         }
 
         public static ValueTask<T> DeserializeAsync<T>(Stream message, CancellationToken cancellationToken)
         {
-            return JsonSerializer.DeserializeAsync<T>(message, jsonOptions, cancellationToken);
+            return JsonSerializer.DeserializeAsync<T>(message, ConverterOptions.JsonSerializerOptions, cancellationToken);
         }
     }
 }

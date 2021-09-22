@@ -1,0 +1,11 @@
+﻿@using Data.Log
+
+@if (LogEntry is PlaintextLogEntry plaintextLogEntry)
+{
+    <PlaintextConsoleLogEntry LogEntry=plaintextLogEntry />
+}
+
+@code {
+    [Parameter]
+    public LogEntry LogEntry { get; set; }
+}

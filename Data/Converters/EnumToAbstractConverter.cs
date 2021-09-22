@@ -26,8 +26,19 @@ namespace Data.Converters
 
             var jsonObject = jsonDocument.RootElement;
 
-
             var propName = options.PropertyNamingPolicy?.ConvertName(TypeFieldName) ?? TypeFieldName;
+
+            if (options.PropertyNameCaseInsensitive)
+            {
+                foreach (var item in jsonObject.EnumerateObject())
+                {
+                    if (item.Name.Equals(propName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        propName = item.Name;
+                        break;
+                    }
+                }
+            }
 
             var prop = jsonObject.GetProperty(propName);
 

@@ -1,8 +1,19 @@
-﻿@inject HttpClient http
+﻿@using Data.Converters
+@using Data.Log
+@using System.Linq
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.DependencyInjection
+@using System.Text.Json
+@inject HttpClient http
+@inject State state
+@implements IAsyncDisposable
 
 <Stack VerticalFill VerticalAlign="Alignment.End">
-    <Stack VerticalFill VerticalAlign="Alignment.End">
-
+    <Stack VerticalFill VerticalAlign="Alignment.End" Style="width:100%;" Tokens="@(new StackTokens() { ChildrenGap = new [] {20d}})">
+        @foreach (var entry in state.LogEntries)
+        {
+            <ConsoleLogEntry LogEntry=entry/>
+        }
     </Stack>
     <form @onsubmit=Enter>
         <Stack Horizontal>
@@ -17,18 +28,63 @@
 @code {
     private string currentValue = "";
 
+    protected override void OnInitialized()
+    {
+        state.OnChange += StateHasChanged;
+    }
+
+    private async Task LoadLogEntries()
+    {
+        var src = new CancellationTokenSource();
+        var entries = await http.GetFromJsonAsync<IEnumerable<LogEntry>>($"/api/logEntries/{Guid.Empty}", src.Token);
+        if (entries == null)
+            return;
+
+        foreach (var entry in entries.OrderBy(e => e.LoggedAt))
+        {
+            state.LogEntries.Add(entry);
+        }
+    }
+
     private async Task Enter()
     {
         var cmd = new AppendLogItemCommand
-        {
-            Payload = new PlaintextPayloadValue
             {
-                Value = currentValue
-            }
-        };
+                Payload = new PlaintextPayloadValue
+                {
+                    Value = currentValue
+                }
+            };
 
         var src = new CancellationTokenSource();
         await http.PostAsJsonAsync("/api/command", cmd, src.Token);
         currentValue = "";
+    }
+
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLogEntries();
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{http.BaseAddress}api/")
+            .AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerOptions = ConverterOptions.JsonSerializerOptions;
+            })
+            .Build();
+
+        hubConnection.On<LogEntry>("newMessage", (logEntry) => state.LogEntries.Add(logEntry));
+
+        await hubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
     }
 }
