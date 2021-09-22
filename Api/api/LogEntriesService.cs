@@ -13,12 +13,11 @@ using Microsoft.Azure.Documents;
 
 namespace api
 {
-    public static class LogEntries
+    public static class LogEntriesService
     {
         [FunctionName("LogEntries")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "logEntries/{missionId:guid}")] HttpRequest req,
-            Guid missionId,
             [CosmosDB(
                 databaseName: "lunar-command",
                 collectionName: "logEntries",

@@ -1,21 +1,14 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using Data.Commands;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-using Azure.Messaging.EventHubs.Producer;
 using System.Linq;
 using System.Threading;
-using Azure.Messaging.EventHubs;
 
 namespace api
 {
