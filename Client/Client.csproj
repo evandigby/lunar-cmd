@@ -25,9 +25,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="SignalR\" />
-  </ItemGroup>
   
 </Project>

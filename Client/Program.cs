@@ -7,6 +7,7 @@ using System.Net.Http;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
+builder.Services.AddAuthorizationCore();
 
 var baseAddress = builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress;
 builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(baseAddress) });
