@@ -27,10 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Microsoft.Authentication.WebAssembly.Msal" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="SignalR\" />
   </ItemGroup>
   
