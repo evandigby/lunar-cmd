@@ -10,8 +10,12 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: 'v4.0'  # set this to the dotnet version to use
+  AZURE_FUNCTIONAPP_NAME: lunar-command
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: Api\published
+  CONFIGURATION: Release
+  DOTNET_CORE_VERSION: 6.0.x
+  WORKING_DIRECTORY: Api
+  DOTNET_CORE_VERSION_INPROC: ''
 
 jobs:
   build-and-deploy:
@@ -20,10 +24,15 @@ jobs:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v2
 
-    - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+    - name: Setup DotNet ${{ env.DOTNET_CORE_VERSION }} Environment
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+
+    - name: Setup .NET Core (3.1 for function build)
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
 
     - name: 'Resolve Project Dependencies Using Dotnet'
       shell: pwsh
