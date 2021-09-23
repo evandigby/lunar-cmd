@@ -35,19 +35,19 @@ jobs:
       with:
         dotnet-version: '3.1.x'
 
-    - name: 'Resolve Project Dependencies Using Dotnet'
-      shell: pwsh
-      run: |
-        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-        dotnet build --configuration Release --output ./output
-        popd
+    - name: Restore
+      run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
 
-    - name: 'Run Azure Functions Action'
+    - name: Build
+      run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+
+    - name: Publish
+      run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
+
+    - name: Deploy to Azure Function App
       uses: Azure/functions-action@v1
-      id: fa
       with:
-        app-name: 'lunar-command'
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         slot-name: 'production'
-        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_26376f6c1b964debbe4fb271297eac5d }}
-  
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
