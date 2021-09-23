@@ -26,6 +26,7 @@
   "auth": {
     "identityProviders": {
       "azureActiveDirectory": {
+        "userDetailsClaim": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
         "registration": {
           "openIdIssuer": "https://login.microsoftonline.com/a4d31d01-f721-4605-8831-34490dc0b8f5/v2.0",
           "clientIdSettingName": "AADClientID",
