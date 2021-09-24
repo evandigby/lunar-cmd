@@ -8,15 +8,7 @@
   },
   "routes": [
     {
-      "route": "/.auth/*",
-      "allowedRoles": [ "anonymous" ]
-    },
-    {
-      "route": "/.well-known/*",
-      "allowedRoles": [ "anonymous" ]
-    },
-    {
-      "route": "/*",
+      "route": "/console",
       "allowedRoles": [ "authenticated" ]
     }
   ],
