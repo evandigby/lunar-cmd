@@ -1,3 +1,4 @@
+using AzureStaticWebApps.Blazor.Authentication;
 using BlazorFluentUI;
 using Client;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -9,8 +10,9 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 
 var baseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress);
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = baseAddress });
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = baseAddress }).AddStaticWebAppsAuthentication();
 builder.Services.AddSingleton<State>(new State(baseAddress));
 builder.Services.AddBlazorFluentUI();
+
 
 await builder.Build().RunAsync();
