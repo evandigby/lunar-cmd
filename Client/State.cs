@@ -7,8 +7,9 @@ namespace Client
 {
     public class State
     {
-        public State()
+        public State(Uri baseAddress)
         {
+            BaseAddress = baseAddress;
             logEntries.CollectionChanged += Messages_CollectionChanged;
         }
 
@@ -20,6 +21,8 @@ namespace Client
         private readonly ObservableCollection<LogEntry> logEntries = new();
 
         public IList<LogEntry> LogEntries => logEntries;
+
+        public Uri BaseAddress {  get; set; }
 
         public event Action? OnChange;
 

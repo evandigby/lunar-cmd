@@ -65,7 +65,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        //await LoadLogEntries();
+        await LoadLogEntries();
 
         hubConnection = new HubConnectionBuilder()
             .WithUrl($"{http.BaseAddress}api/")

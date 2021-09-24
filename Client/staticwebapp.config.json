@@ -6,20 +6,11 @@
       "/css/*"
     ]
   },
-  "routes": [
-    {
-      "route": "/console",
-      "allowedRoles": [ "authenticated" ]
-    },
-    {
-      "route": "/api/*",
-      "allowedRoles": [ "anonymous" ]
-    }
-  ],
   "responseOverrides": {
     "401": {
       "redirect": "/.auth/login/aad",
-      "statusCode": 302
+      "statusCode": 302,
+      "exclude": [ "/api/*" ]
     }
   }
 }
