@@ -10,6 +10,10 @@
     {
       "route": "/console",
       "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/api/*",
+      "allowedRoles": [ "anonymous" ]
     }
   ],
   "responseOverrides": {
