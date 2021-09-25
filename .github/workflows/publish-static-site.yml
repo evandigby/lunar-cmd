@@ -1,0 +1,56 @@
+name: CI
+
+env:
+  CONFIGURATION: Release
+  DOTNET_CORE_VERSION: 6.0.x
+  WORKING_DIRECTORY: Client
+  PACKAGE_PATH: Client\published
+  
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Azure Auth
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDS }}
+
+      - name: Setup DotNet ${{ env.DOTNET_CORE_VERSION }} Environment
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+          include-prerelease: True
+
+      - name: Restore
+        run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
+
+      - name: Build
+        run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Publish
+        run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.PACKAGE_PATH }}"
+     
+      - name: Purge Files
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: az storage blob delete-batch --account-name lunarcmdstatic --account-key ${{ secrets.AZURE_STORAGE_KEY }} -s '$web'
+       
+      - name: Purge Files
+        uses: Azure/cli@1.0.4
+        with:
+          inlineScript: sleep 5; cd ${{ env.PACKAGE_PATH }}/wwwroot ; pwd;
+            az storage blob upload-batch --account-name lunarcmdstatic --account-key ${{ secrets.AZURE_STORAGE_KEY }} -s '$web'
+          
+      - name: Log out of Azure
+        run: az logout
