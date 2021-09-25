@@ -50,7 +50,7 @@ jobs:
         uses: Azure/cli@1.0.4
         with:
           inlineScript: sleep 5; cd ${{ env.PACKAGE_PATH }}/wwwroot ; pwd;
-            az storage blob upload-batch --account-name lunarcmdstatic --account-key ${{ secrets.AZURE_STORAGE_KEY }} -d '$web'
+            az storage blob upload-batch --account-name lunarcmdstatic --account-key ${{ secrets.AZURE_STORAGE_KEY }} -d '$web' -s .
           
       - name: Log out of Azure
         run: az logout
