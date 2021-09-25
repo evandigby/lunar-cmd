@@ -1,3 +1,15 @@
 ﻿@page "/"
+@inject HttpClient client
 
-<Client.Components.Console.Console />
+<AuthorizeView>
+    <Authorized>
+        <Client.Components.Console.Console />
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public string BaseAddress => client.BaseAddress.ToString();
+}

@@ -1,10 +1,13 @@
-﻿@using Data.Converters
+﻿@attribute [Authorize]
+@using Data.Converters
 @using Data.Log
 @using System.Linq
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Microsoft.AspNetCore.SignalR.Client
 @using Microsoft.Extensions.DependencyInjection
 @using System.Text.Json
-@inject HttpClient http
+@inject HttpClient client
 @inject State state
 @implements IAsyncDisposable
 
@@ -36,13 +39,22 @@
     private async Task LoadLogEntries()
     {
         var src = new CancellationTokenSource();
-        var entries = await http.GetFromJsonAsync<IEnumerable<LogEntry>>($"/api/logEntries/{Guid.Empty}", src.Token);
-        if (entries == null)
-            return;
 
-        foreach (var entry in entries.OrderBy(e => e.LoggedAt))
+        try
         {
-            state.LogEntries.Add(entry);
+            var entries = await client.GetFromJsonAsync<IEnumerable<LogEntry>>($"/api/logEntries/{Guid.Empty}", src.Token);
+
+            if (entries == null)
+                return;
+
+            foreach (var entry in entries.OrderBy(e => e.LoggedAt))
+            {
+                state.LogEntries.Add(entry);
+            }
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
         }
     }
 
@@ -57,7 +69,16 @@
             };
 
         var src = new CancellationTokenSource();
-        await http.PostAsJsonAsync("/api/command", cmd, src.Token);
+
+        try
+        {
+            await client.PostAsJsonAsync("/api/command", cmd, src.Token);
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+
         currentValue = "";
     }
 
@@ -66,9 +87,8 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadLogEntries();
-
         hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{http.BaseAddress}api/")
+            .WithUrl($"{client.BaseAddress}api/")
             .AddJsonProtocol(options =>
             {
                 options.PayloadSerializerOptions = ConverterOptions.JsonSerializerOptions;
