@@ -1,10 +1,10 @@
-name: CI
+name: Publish Static Site
 
 env:
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 6.0.x
   WORKING_DIRECTORY: Client
-  PACKAGE_PATH: Client\published
+  PACKAGE_PATH: Client/published
   
 on:
   push:
@@ -46,7 +46,7 @@ jobs:
         with:
           inlineScript: az storage blob delete-batch --account-name lunarcmdstatic --account-key ${{ secrets.AZURE_STORAGE_KEY }} -s '$web'
        
-      - name: Purge Files
+      - name: Upload Files
         uses: Azure/cli@1.0.4
         with:
           inlineScript: sleep 5; cd ${{ env.PACKAGE_PATH }}/wwwroot ; pwd;
