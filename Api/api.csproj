@@ -13,7 +13,9 @@
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.EventHubs" Version="5.0.0-beta.7" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.SignalRService" Version="1.6.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0-rc.1.21451.13" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="6.12.2" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.0-preview2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.12.2" />
     <PackageReference Include="System.Text.Json" Version="6.0.0-rc.1.21451.13" />
   </ItemGroup>
   <ItemGroup>
@@ -28,4 +30,7 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
   </ItemGroup>
+  <PropertyGroup>
+    <_FunctionsSkipCleanOutput>true</_FunctionsSkipCleanOutput>
+  </PropertyGroup>
 </Project>
