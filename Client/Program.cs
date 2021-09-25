@@ -15,21 +15,20 @@ var baseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnv
 builder.Services.AddSingleton<State>(new State(baseAddress));
 builder.Services.AddBlazorFluentUI();
 
-builder.Services.AddMsalAuthentication(options =>
-{
-    builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
-    options.ProviderOptions.LoginMode = "redirect";
-    options.ProviderOptions.DefaultAccessTokenScopes.Add("openid");
-    options.ProviderOptions.DefaultAccessTokenScopes.Add("offline_access");
-    options.ProviderOptions.DefaultAccessTokenScopes.Add("https://lunarcommand.onmicrosoft.com/cnc/LogEntries.Read");
-    options.ProviderOptions.DefaultAccessTokenScopes.Add("https://lunarcommand.onmicrosoft.com/cnc/LogEntries.Write");
-});
+//builder.Services.AddMsalAuthentication(options =>
+//{
+//    builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
+//    options.ProviderOptions.LoginMode = "redirect";
+//    options.ProviderOptions.DefaultAccessTokenScopes.Add("openid");
+//    options.ProviderOptions.DefaultAccessTokenScopes.Add("offline_access");
+//    options.ProviderOptions.DefaultAccessTokenScopes.Add("https://lunarcommand.onmicrosoft.com/cnc/LogEntries.Read");
+//    options.ProviderOptions.DefaultAccessTokenScopes.Add("https://lunarcommand.onmicrosoft.com/cnc/LogEntries.Write");
+//});
 
-builder.Services.AddScoped<CustomAuthorizationMessageHandler>();
+//builder.Services.AddScoped<CustomAuthorizationMessageHandler>();
 
-builder.Services.AddHttpClient("WebAPI",
-        client => client.BaseAddress = baseAddress)
-    .AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
+builder.Services.AddHttpClient("WebAPI", client => client.BaseAddress = baseAddress);
+    //.AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
 
 builder.Services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("WebAPI"));
 
