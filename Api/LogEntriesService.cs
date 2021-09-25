@@ -47,7 +47,7 @@ namespace api
             }
             else
             {
-                return (ActionResult)new UnauthorizedResult();
+                return (ActionResult)new OkObjectResult("HI. It didn't work");
             }
         }
 
