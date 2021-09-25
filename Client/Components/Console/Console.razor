@@ -40,6 +40,8 @@
     {
         var src = new CancellationTokenSource();
 
+        await client.GetFromJsonAsync<IEnumerable<LogEntry>>($"/api/lawgEntries", src.Token);
+
         try
         {
             var entries = await client.GetFromJsonAsync<IEnumerable<LogEntry>>($"/api/logEntries/{Guid.Empty}", src.Token);

@@ -47,7 +47,7 @@ namespace api
             }
             else
             {
-                return (ActionResult)new OkObjectResult("HI. It didn't work");
+                return (ActionResult)new OkObjectResult($"{accessToken} HI. It didn't work");
             }
         }
 
@@ -77,7 +77,7 @@ namespace api
                 // App Id URI and AppId of this service application are both valid audiences.
                 ValidAudiences = new[] { "https://lunarcommand.onmicrosoft.com/cnc/LogEntries.Read", "https://lunarcommand.onmicrosoft.com/cnc/LogEntries.Write", clientID },
                 // Support Azure AD V1 and V2 endpoints.
-                ValidIssuers = new[] { "https://login.microsoftonline.com/lunarcommand.onmicrosoft.com" },
+                ValidIssuers = new[] { "https://login.microsoftonline.com/a4d31d01-f721-4605-8831-34490dc0b8f5/v2.0", "https://login.microsoftonline.com/lunarcommand.onmicrosoft.com/v2.0" },
                 IssuerSigningKeys = config.SigningKeys
             };
             try
