@@ -27,7 +27,7 @@ namespace api
         {
             try
             {
-                var claimsPrincipal = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
+                var user = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
             }
             catch (Exception ex)
             {
@@ -44,7 +44,7 @@ namespace api
         {
             try
             {
-                var claimsPrincipal = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
+                var user = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
             }
             catch (Exception ex)
             {

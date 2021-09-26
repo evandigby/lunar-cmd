@@ -9,6 +9,7 @@ using Data.Commands;
 using System.Security.Claims;
 using System.Linq;
 using System.Threading;
+using Data.Users;
 
 namespace api
 {
@@ -21,10 +22,10 @@ namespace api
             ILogger log,
             CancellationToken cancellationToken)
         {
-            ClaimsPrincipal claimsPrincipal;
+            User user;
             try
             {
-                claimsPrincipal = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
+                user = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
             }
             catch (Exception ex)
             {
@@ -33,39 +34,16 @@ namespace api
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, req.HttpContext.RequestAborted);
 
-            Guid userId;
-            string userName = string.Empty;
-
-            try
-            {
-                var nameIdentifier = claimsPrincipal.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).SingleOrDefault();
-
-                if (!Guid.TryParse(nameIdentifier?.Value, out userId))
-                {
-                    throw new Exception("invalid user");
-                }
-
-                userName = claimsPrincipal.Claims.Where(c => c.Type == ClaimTypes.Name || c.Type == "name").SingleOrDefault()?.Value;
-
-                if (string.IsNullOrWhiteSpace(userName))
-                {
-                    throw new Exception("invalid user name");
-                }
-            }
-            catch (Exception ex)
-            {
-                return new BadRequestObjectResult(ex);
-            }
+            
 
             Command command;
             try
             {
                 command = await Util.DeserializeAsync<Command>(req.Body, cancellationSource.Token);
-                command.UserId = userId;
-                command.CreatedBy = userName;
+                command.User = user;
                 command.ReceivedAt = DateTime.UtcNow;
 
-                log.LogInformation($"Received {command.Name} command from {command.UserId}");
+                log.LogInformation($"Received {command.Name} command from {command.User.Id} ({command.User.Name})");
             }
             catch (Exception ex)
             {

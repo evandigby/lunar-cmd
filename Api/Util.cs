@@ -13,11 +13,6 @@ namespace api
 {
     public class Util
     {
-        public static string PartitionKey()
-        {
-            return ConverterOptions.JsonSerializerOptions.PropertyNamingPolicy?.ConvertName(nameof(Command.UserId)) ?? nameof(Command.UserId);
-        }
-
         public static string Serialize<T>(T item)
         {
             return JsonSerializer.Serialize(item, ConverterOptions.JsonSerializerOptions);

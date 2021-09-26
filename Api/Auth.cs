@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Data.Users;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -60,7 +61,7 @@ namespace api
             return tokenValidator.ValidateToken(accessToken, validationParameters, out SecurityToken securityToken);
         }
 
-        public static async Task<ClaimsPrincipal> AuthenticateRequest(HttpRequest req, IEnumerable<string> requiredClaims)
+        public static async Task<User> AuthenticateRequest(HttpRequest req, IEnumerable<string> requiredClaims)
         {
             var accessToken = GetAccessToken(req);
             var claimsPrincipal = await ValidateAccessToken(accessToken);
@@ -76,7 +77,26 @@ namespace api
                 throw new Exception($"Missing the following claim(s): {string.Join(" ", missing)}");
             }
 
-            return claimsPrincipal;
+            var nameIdentifier = claimsPrincipal.Claims.SingleOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrWhiteSpace(nameIdentifier))
+            {
+                throw new Exception("invalid user");
+            }
+
+            string userName = claimsPrincipal.Claims.SingleOrDefault(c => c.Type == ClaimTypes.Name || c.Type == "name")?.Value;
+
+            if (string.IsNullOrWhiteSpace(userName))
+            {
+                throw new Exception("invalid user name");
+            }
+
+            return new User
+            { 
+                Id = nameIdentifier,
+                Name = userName,
+                PreferredUserName = claimsPrincipal.Claims.SingleOrDefault(c => c.Type == "preferred_username").Value,
+            };
         }
     }
 }

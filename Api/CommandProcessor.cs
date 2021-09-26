@@ -42,7 +42,7 @@ namespace api
                                 Id = Guid.NewGuid(),
                                 MissionId = cmd.MissionId,
                                 EntryType = LogEntryType.Plaintext,
-                                LoggedBy = cmd.CreatedBy,
+                                User = cmd.User,
                                 LoggedAt = DateTime.UtcNow,
                                 Value = plaintextPayloadValue.Value
                             };

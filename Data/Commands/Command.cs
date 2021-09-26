@@ -1,4 +1,5 @@
 ﻿using Data.Converters;
+using Data.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,9 +14,8 @@ namespace Data.Commands
     {
         public Guid MissionId {  get; set; }
         public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public User User { get; set; }
         public string Name { get; set; }
-        public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime ReceivedAt { get; set; }
         public abstract CommandType CommandType { get; }
