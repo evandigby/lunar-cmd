@@ -45,7 +45,7 @@ namespace api
                 var claimsPrincipal = await Auth.ValidateAccessToken(accessToken);
                 if (claimsPrincipal != null)
                 {
-                    return (ActionResult)new OkObjectResult(claimsPrincipal);
+                    return (ActionResult)new OkObjectResult(Util.Serialize(claimsPrincipal.Claims.Select(c => new { c.Type, c.Value })));
                 }
                 else
                 {
