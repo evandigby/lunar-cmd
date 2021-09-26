@@ -21,6 +21,16 @@ namespace api
             ILogger log,
             CancellationToken cancellationToken)
         {
+            ClaimsPrincipal claimsPrincipal;
+            try
+            {
+                claimsPrincipal = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
+            }
+            catch (Exception ex)
+            {
+                return new UnauthorizedObjectResult(ex);
+            }
+
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, req.HttpContext.RequestAborted);
 
             Guid userId;
@@ -28,16 +38,14 @@ namespace api
 
             try
             {
-                var clientPrincipal = Auth.Parse(req);
-
-                var nameIdentifier = clientPrincipal.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).SingleOrDefault();
+                var nameIdentifier = claimsPrincipal.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).SingleOrDefault();
 
                 if (!Guid.TryParse(nameIdentifier?.Value, out userId))
                 {
                     throw new Exception("invalid user");
                 }
 
-                userName = clientPrincipal.Claims.Where(c => c.Type == ClaimTypes.Name).SingleOrDefault()?.Value;
+                userName = claimsPrincipal.Claims.Where(c => c.Type == ClaimTypes.Name || c.Type == "name").SingleOrDefault()?.Value;
 
                 if (string.IsNullOrWhiteSpace(userName))
                 {

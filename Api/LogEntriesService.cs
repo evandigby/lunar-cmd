@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -10,11 +9,6 @@ using Data.Log;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.Documents;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Protocols;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace api
 {
@@ -31,6 +25,15 @@ namespace api
                 PartitionKey = "{missionId}")]IEnumerable<Document> logEntries,
             ILogger log)
         {
+            try
+            {
+                var claimsPrincipal = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
+            }
+            catch (Exception ex)
+            {
+                return new UnauthorizedObjectResult(ex);
+            }
+
             return new OkObjectResult(logEntries.Select(e => Util.Deserialize<LogEntry>(e.ToString())).ToArray());
         }
 
@@ -41,21 +44,14 @@ namespace api
         {
             try
             {
-                var accessToken = Auth.GetAccessToken(req);
-                var claimsPrincipal = await Auth.ValidateAccessToken(accessToken);
-                if (claimsPrincipal != null)
-                {
-                    return (ActionResult)new OkObjectResult(Util.Serialize(claimsPrincipal.Claims.Select(c => new { c.Type, c.Value })));
-                }
-                else
-                {
-                    return (ActionResult)new OkObjectResult($"{accessToken} HI. It didn't work");
-                }
+                var claimsPrincipal = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
             }
             catch (Exception ex)
             {
-                return (ActionResult)new OkObjectResult(ex);
+                return new UnauthorizedObjectResult(ex);
             }
+
+            return new OkResult();
         }
     }
 }

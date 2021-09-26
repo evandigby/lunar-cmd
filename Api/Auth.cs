@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -13,41 +14,20 @@ using System.Threading.Tasks;
 
 namespace api
 {
+    public static class AuthClaims
+    {
+        public static readonly string ReadLogEntires = "LogEntries.Read";
+        public static readonly string WriteLogEntires = "LogEntries.Write";
+    }
+
+    public static class StandardUsers
+    {
+        public static readonly string[] Contributor = new[] { AuthClaims.ReadLogEntires, AuthClaims.WriteLogEntires };
+    }
+
+
     public static class Auth
     {
-        public static ClaimsPrincipal Parse(HttpRequest req)
-        {
-            var principal = new ClientPrincipal();
-
-            if (req.Headers.TryGetValue("x-ms-client-principal", out var header))
-            {
-                var data = header[0];
-                var decoded = Convert.FromBase64String(data);
-                var json = Encoding.UTF8.GetString(decoded);
-                principal = JsonSerializer.Deserialize<ClientPrincipal>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            } 
-            else if (Guid.TryParse(Environment.GetEnvironmentVariable("LocalUserId"), out Guid envUserId))
-            {
-                principal.UserId = envUserId.ToString();
-                principal.UserRoles = (Environment.GetEnvironmentVariable("LocalUserRoles") ?? "").Split(",");
-                principal.UserDetails = Environment.GetEnvironmentVariable("LocalUserDetails");
-            }
-
-            principal.UserRoles = principal.UserRoles?.Except(new string[] { "anonymous" }, StringComparer.CurrentCultureIgnoreCase);
-
-            if (!principal.UserRoles?.Any() ?? true)
-            {
-                return new ClaimsPrincipal();
-            }
-
-            var identity = new ClaimsIdentity(principal.IdentityProvider);
-            identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, principal.UserId));
-            identity.AddClaim(new Claim(ClaimTypes.Name, principal.UserDetails));
-            identity.AddClaims(principal.UserRoles.Select(r => new Claim(ClaimTypes.Role, r)));
-
-            return new ClaimsPrincipal(identity);
-        }
-
         public static string GetAccessToken(HttpRequest req)
         {
             var authorizationHeader = req.Headers?["Authorization"];
@@ -63,9 +43,6 @@ namespace api
             var clientID = "b6260c01-db46-4416-9fa4-a2e6d8b421cf";
             var authority = "https://login.microsoftonline.com/lunarcommand.onmicrosoft.com";
 
-            // Debugging purposes only, set this to false for production
-            Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
-
             ConfigurationManager<OpenIdConnectConfiguration> configManager = new($"{authority}/.well-known/openid-configuration", new OpenIdConnectConfigurationRetriever());
 
             OpenIdConnectConfiguration config = await configManager.GetConfigurationAsync();
@@ -80,16 +57,26 @@ namespace api
                 ValidIssuers = new[] { "https://login.microsoftonline.com/a4d31d01-f721-4605-8831-34490dc0b8f5/v2.0" },
                 IssuerSigningKeys = config.SigningKeys
             };
-            //try
-            //{
-            var claimsPrincipal = tokenValidator.ValidateToken(accessToken, validationParameters, out SecurityToken securityToken);
+            return tokenValidator.ValidateToken(accessToken, validationParameters, out SecurityToken securityToken);
+        }
+
+        public static async Task<ClaimsPrincipal> AuthenticateRequest(HttpRequest req, IEnumerable<string> requiredClaims)
+        {
+            var accessToken = GetAccessToken(req);
+            var claimsPrincipal = await ValidateAccessToken(accessToken);
+
+            var scopes = (claimsPrincipal.Claims
+                .Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/scope" || c.Type == "scp")
+                .FirstOrDefault()?.Value.Split(" ") ?? Array.Empty<string>()).ToHashSet();
+
+            var missing = requiredClaims.Where(c => !scopes.Contains(c));
+
+            if (missing.Any())
+            {
+                throw new Exception($"Missing the following claim(s): {string.Join(" ", missing)}");
+            }
+
             return claimsPrincipal;
-            //}
-            //catch (Exception ex)
-            //{
-            //    log.LogError(ex.ToString());
-            //}
-            //return null;
         }
     }
 }
