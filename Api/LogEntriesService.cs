@@ -80,16 +80,16 @@ namespace api
                 ValidIssuers = new[] { "https://login.microsoftonline.com/a4d31d01-f721-4605-8831-34490dc0b8f5/v2.0", "https://login.microsoftonline.com/lunarcommand.onmicrosoft.com/v2.0" },
                 IssuerSigningKeys = config.SigningKeys
             };
-            try
-            {
+            //try
+            //{
                 var claimsPrincipal = tokenValidator.ValidateToken(accessToken, validationParameters, out SecurityToken securityToken);
                 return claimsPrincipal;
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex.ToString());
-            }
-            return null;
+            //}
+            //catch (Exception ex)
+            //{
+            //    log.LogError(ex.ToString());
+            //}
+            //return null;
         }
     }
 }
