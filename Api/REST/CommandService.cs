@@ -10,14 +10,16 @@ using System.Security.Claims;
 using System.Linq;
 using System.Threading;
 using Data.Users;
+using api.Auth;
+using Data.Converters;
 
-namespace api
+namespace api.REST
 {
     public static class CommandService
     {
         [FunctionName("SendCommand")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "command")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "commands")] HttpRequest req,
             [EventHub("commands", Connection = "EventHubs")] IAsyncCollector<string> commands,
             ILogger log,
             CancellationToken cancellationToken)
@@ -25,7 +27,7 @@ namespace api
             User user;
             try
             {
-                user = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
+                user = await RequestValidation.AuthenticateRequest(req, StandardUsers.Contributor);
             }
             catch (Exception ex)
             {
@@ -39,7 +41,7 @@ namespace api
             Command command;
             try
             {
-                command = await Util.DeserializeAsync<Command>(req.Body, cancellationSource.Token);
+                command = await Command.DeserializeAsync(req.Body, cancellationSource.Token);
                 command.User = user;
                 command.ReceivedAt = DateTime.UtcNow;
 
@@ -52,7 +54,7 @@ namespace api
 
             try
             {
-                await commands.AddAsync(Util.Serialize(command), cancellationSource.Token);
+                await commands.AddAsync(command.Serialize(), cancellationSource.Token);
             }
             catch (Exception ex)
             {

@@ -13,23 +13,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace api
+namespace api.Auth
 {
-    public static class AuthClaims
+    public static class RequestValidation
     {
-        public static readonly string ReadLogEntires = "LogEntries.Read";
-        public static readonly string WriteLogEntires = "LogEntries.Write";
-    }
-
-    public static class StandardUsers
-    {
-        public static readonly string[] Contributor = new[] { AuthClaims.ReadLogEntires, AuthClaims.WriteLogEntires };
-    }
-
-
-    public static class Auth
-    {
-        public static string GetAccessToken(HttpRequest req)
+        private static string GetAccessToken(HttpRequest req)
         {
             var authorizationHeader = req.Headers?["Authorization"];
             string[] parts = authorizationHeader?.ToString().Split(null) ?? new string[0];
@@ -38,9 +26,9 @@ namespace api
             return null;
         }
 
-
-        public static async Task<ClaimsPrincipal> ValidateAccessToken(string accessToken)
+        private static async Task<ClaimsPrincipal> ValidateAccessToken(string accessToken)
         {
+            // TODO: Move to config
             var clientID = "b6260c01-db46-4416-9fa4-a2e6d8b421cf";
             var authority = "https://login.microsoftonline.com/lunarcommand.onmicrosoft.com";
 
@@ -49,12 +37,10 @@ namespace api
             OpenIdConnectConfiguration config = await configManager.GetConfigurationAsync();
 
             ISecurityTokenValidator tokenValidator = new JwtSecurityTokenHandler();
-            // Initialize the token validation parameters
+
             TokenValidationParameters validationParameters = new()
             {
-                // App Id URI and AppId of this service application are both valid audiences.
                 ValidAudiences = new[] { clientID },
-                // Support Azure AD V1 and V2 endpoints.
                 ValidIssuers = new[] { "https://login.microsoftonline.com/a4d31d01-f721-4605-8831-34490dc0b8f5/v2.0" },
                 IssuerSigningKeys = config.SigningKeys
             };

@@ -1,6 +1,8 @@
 using BlazorFluentUI;
 using Client;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using Client.RealTimeCommunication;
+using Client.State;
+using LunarAPIClient;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +14,7 @@ builder.RootComponents.Add<App>("#app");
 
 var baseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress);
 
-builder.Services.AddSingleton<State>(new State(baseAddress));
+builder.Services.AddSingleton<StateContainer>(new StateContainer(baseAddress));
 builder.Services.AddBlazorFluentUI();
 
 builder.Services.AddMsalAuthentication(options =>
@@ -32,5 +34,9 @@ builder.Services.AddHttpClient("WebAPI",
     .AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
 
 builder.Services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("WebAPI"));
+
+builder.Services.AddTransient<ILogEntryClient, LogEntryClient>();
+builder.Services.AddTransient<ICommandClient, CommandClient>();
+builder.Services.AddTransient<IHubConnectionFactory, HubConnectionFactory>();
 
 await builder.Build().RunAsync();

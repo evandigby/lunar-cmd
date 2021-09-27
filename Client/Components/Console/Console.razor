@@ -1,19 +1,22 @@
 ﻿@attribute [Authorize]
+@using Client.RealTimeCommunication
 @using Data.Converters
 @using Data.Log
 @using System.Linq
+@using LunarAPIClient
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Microsoft.AspNetCore.SignalR.Client
 @using Microsoft.Extensions.DependencyInjection
 @using System.Text.Json
-@inject HttpClient client
-@inject State state
+@inject ILogEntryClient logEntryClient
+@inject ICommandClient commandClient
+@inject IHubConnectionFactory hubConnectionFactory
 @implements IAsyncDisposable
 
 <Stack VerticalFill VerticalAlign="Alignment.End">
     <Stack VerticalFill VerticalAlign="Alignment.End" Style="width:100%;" Tokens="@(new StackTokens() { ChildrenGap = new [] {20d}})">
-        @foreach (var entry in state.LogEntries)
+        @foreach (var entry in ConsoleState.LogEntries)
         {
             <ConsoleLogEntry LogEntry=entry/>
         }
@@ -21,7 +24,7 @@
     <form @onsubmit=Enter>
         <Stack Horizontal>
             <StackItem Grow=1>
-                <TextField @bind-Value=currentValue />
+                <TextField @bind-Value=ConsoleState.CurrentEntryText />
             </StackItem>
             <DefaultButton Text="Send" />
         </Stack>
@@ -29,12 +32,8 @@
 </Stack>
 
 @code {
-    private string currentValue = "";
-
-    protected override void OnInitialized()
-    {
-        state.OnChange += StateHasChanged;
-    }
+    [Parameter]
+    public State.Console ConsoleState { get; set; } = new State.Console();
 
     private async Task LoadLogEntries()
     {
@@ -42,14 +41,11 @@
 
         try
         {
-            var entries = await client.GetFromJsonAsync<IEnumerable<LogEntry>>($"/api/logEntries/{Guid.Empty}", src.Token);
-
-            if (entries == null)
-                return;
+            var entries = await logEntryClient.GetLogEntriesByMissionId(Guid.Empty, src.Token);
 
             foreach (var entry in entries.OrderBy(e => e.LoggedAt))
             {
-                state.LogEntries.Add(entry);
+                ConsoleState.LogEntries.Add(entry);
             }
         }
         catch (AccessTokenNotAvailableException exception)
@@ -64,7 +60,7 @@
             {
                 Payload = new PlaintextPayloadValue
                 {
-                    Value = currentValue
+                    Value = ConsoleState.CurrentEntryText
                 }
             };
 
@@ -72,14 +68,14 @@
 
         try
         {
-            await client.PostAsJsonAsync("/api/command", cmd, src.Token);
+            await commandClient.SendCommand(cmd, src.Token);
         }
         catch (AccessTokenNotAvailableException exception)
         {
             exception.Redirect();
         }
 
-        currentValue = "";
+        ConsoleState.CurrentEntryText = "";
     }
 
     private HubConnection? hubConnection;
@@ -87,17 +83,8 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadLogEntries();
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{client.BaseAddress}api/")
-            .AddJsonProtocol(options =>
-            {
-                options.PayloadSerializerOptions = ConverterOptions.JsonSerializerOptions;
-            })
-            .Build();
 
-        hubConnection.On<LogEntry>("newMessage", (logEntry) => state.LogEntries.Add(logEntry));
-
-        await hubConnection.StartAsync();
+        hubConnection = await hubConnectionFactory.ConnectHub<LogEntry>("newMessage", (state, logEntry) => state.Console.LogEntries.Add(logEntry));
     }
 
     public async ValueTask DisposeAsync()

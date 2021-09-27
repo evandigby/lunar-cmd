@@ -9,14 +9,15 @@ using Data.Log;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.Documents;
+using api.Auth;
 
-namespace api
+namespace api.REST
 {
     public static class LogEntriesService
     {
         [FunctionName("LogEntries")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "logEntries/{missionId:guid}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "log-entries/{missionId:guid}")] HttpRequest req,
             [CosmosDB(
                 databaseName: "lunar-command",
                 collectionName: "logEntries",
@@ -27,31 +28,14 @@ namespace api
         {
             try
             {
-                var user = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
+                var user = await Auth.RequestValidation.AuthenticateRequest(req, StandardUsers.Contributor);
             }
             catch (Exception ex)
             {
                 return new UnauthorizedObjectResult(ex);
             }
 
-            return new OkObjectResult(logEntries.Select(e => Util.Deserialize<LogEntry>(e.ToString())).ToArray());
-        }
-
-        [FunctionName("LawgEntries")]
-        public static async Task<IActionResult> LawgEntries(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "lawgEntries")] HttpRequest req,
-           ILogger log)
-        {
-            try
-            {
-                var user = await Auth.AuthenticateRequest(req, StandardUsers.Contributor);
-            }
-            catch (Exception ex)
-            {
-                return new UnauthorizedObjectResult(ex);
-            }
-
-            return new OkResult();
+            return new OkObjectResult(logEntries.Select(e => LogEntry.Deserialize(e.ToString())).ToArray());
         }
     }
 }

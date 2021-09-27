@@ -2,9 +2,12 @@
 using Data.Users;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Data.Commands
@@ -25,6 +28,16 @@ namespace Data.Commands
         {
             Id = Guid.NewGuid();
             CreatedAt = DateTime.UtcNow;
+        }
+
+        public static Command Deserialize(string payload)
+        {
+            return JsonSerializer.Deserialize<Command>(payload, ConverterOptions.JsonSerializerOptions);
+        }
+
+        public static ValueTask<Command> DeserializeAsync(Stream payload, CancellationToken cancellationToken)
+        {
+            return JsonSerializer.DeserializeAsync<Command>(payload, ConverterOptions.JsonSerializerOptions, cancellationToken);
         }
     }
 }

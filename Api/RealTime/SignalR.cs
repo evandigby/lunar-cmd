@@ -8,14 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 
-namespace api
+namespace api.RealTime
 {
     public static class SignalR
     {
         [FunctionName("negotiate")]
         public static SignalRConnectionInfo GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
-            [SignalRConnectionInfo(HubName = "chat", ConnectionStringSetting = "AzureSignalRConnectionString")] SignalRConnectionInfo connectionInfo)
+            [SignalRConnectionInfo(HubName = "logEntries", ConnectionStringSetting = "AzureSignalRConnectionString")] SignalRConnectionInfo connectionInfo)
         {
             return connectionInfo;
         }

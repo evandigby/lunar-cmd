@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Client.State;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace Client
@@ -7,7 +8,7 @@ namespace Client
     {
         public CustomAuthorizationMessageHandler(IAccessTokenProvider provider,
             NavigationManager navigationManager,
-            State state)
+            StateContainer state)
             : base(provider, navigationManager)
         {
             ConfigureHandler(

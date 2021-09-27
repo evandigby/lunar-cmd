@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -18,5 +19,10 @@ namespace Data.Log
         public LogEntryType EntryType { get; set; }
         public User User {  get; set; }
         public DateTime LoggedAt { get; set; }
+
+        public static LogEntry Deserialize(string payload)
+        {
+            return JsonSerializer.Deserialize<LogEntry>(payload, ConverterOptions.JsonSerializerOptions);
+        }
     }
 }

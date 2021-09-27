@@ -9,11 +9,11 @@ using Azure.Messaging.EventHubs;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 
-namespace api
+namespace api.EventHubs
 {
     public static class CommandWriter
     {
-         [FunctionName("CommandWriter")]
+        [FunctionName("CommandWriter")]
         public static async Task Run(
             [EventHubTrigger("commands", Connection = "EventHubsWrite")] EventData[] events, 
             [CosmosDB("lunar-command", "commands", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> commands,
@@ -38,11 +38,13 @@ namespace api
                 }
             }
 
-            if (exceptions.Count > 1)
-                throw new AggregateException(exceptions);
+            if (!exceptions.Any())
+                return;
 
             if (exceptions.Count == 1)
                 throw exceptions.Single();
+
+            throw new AggregateException(exceptions);
         }
     }
 }
