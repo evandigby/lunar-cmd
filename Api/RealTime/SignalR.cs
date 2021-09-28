@@ -15,7 +15,7 @@ namespace api.RealTime
         [FunctionName("negotiate")]
         public static SignalRConnectionInfo GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
-            [SignalRConnectionInfo(HubName = "logEntries", ConnectionStringSetting = "AzureSignalRConnectionString")] SignalRConnectionInfo connectionInfo)
+            [SignalRConnectionInfo(HubName = "%SignalRHubName%", ConnectionStringSetting = "AzureSignalRConnectionString")] SignalRConnectionInfo connectionInfo)
         {
             return connectionInfo;
         }

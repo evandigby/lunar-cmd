@@ -14,7 +14,8 @@ namespace LunarAPIClient
         {
         }
 
-        protected override string ApiEndpoint => "/api/commands";
+        protected override string ApiVersion => "v1.0";
+        protected override string ApiEndpoint => $"/api/{ApiVersion}/commands";
 
         public async Task SendCommand(Command cmd, CancellationToken cancellationToken)
         {

@@ -1,0 +1,11 @@
+﻿@using Data.Log
+
+@if (Value is PlaintextLogEntry plaintextLogEntry)
+{
+    <PlaintextLogEntryView Value=plaintextLogEntry />
+}
+
+@code {
+    [Parameter]
+    public LogEntry Value { get; set; } = new PlaintextLogEntry();
+}

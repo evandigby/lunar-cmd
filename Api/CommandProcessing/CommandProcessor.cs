@@ -17,14 +17,14 @@ namespace api.CommandProcessing
     {
         [FunctionName("CommandProcessor")]
         public static async Task Run([CosmosDBTrigger(
-            "lunar-command",
-            "commands",
+            "%CosmosDBDatabaseName%",
+            "%CosmosDBCommandsCollectionName%",
             ConnectionStringSetting = "CosmosDB",
-            LeaseCollectionName = "leases",
+            LeaseCollectionName = "%CosmosDBLeaseCollectionName%",
             CreateLeaseCollectionIfNotExists = true
             )]IReadOnlyList<Document> input, 
-            [SignalR(HubName = "chat", ConnectionStringSetting = "AzureSignalRConnectionString")] IAsyncCollector<SignalRMessage> messages,
-            [CosmosDB("lunar-command", "logEntries", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> logEntries,
+            [SignalR(HubName = "%SignalRHubName%", ConnectionStringSetting = "AzureSignalRConnectionString")] IAsyncCollector<SignalRMessage> messages,
+            [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBLogEntriesCollectionName%", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> logEntries,
             ILogger log)
         {
             var exceptions = new List<Exception>();

@@ -19,16 +19,16 @@ namespace api.REST
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "log-entries/{missionId:guid}")] HttpRequest req,
             [CosmosDB(
-                databaseName: "lunar-command",
-                collectionName: "logEntries",
+                databaseName: "%CosmosDBDatabaseName%",
+                collectionName: "%CosmosDBLogEntriesCollectionName%",
                 ConnectionStringSetting = "CosmosDB",
-                SqlQuery = "SELECT * from logEntries l where l.missionId = {missionId}",
+                SqlQuery = "SELECT * from l where l.missionId = {missionId}",
                 PartitionKey = "{missionId}")]IEnumerable<Document> logEntries,
             ILogger log)
         {
             try
             {
-                var user = await Auth.RequestValidation.AuthenticateRequest(req, StandardUsers.Contributor);
+                var user = await RequestValidation.AuthenticateRequest(req, StandardUsers.Contributor);
             }
             catch (Exception ex)
             {

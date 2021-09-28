@@ -1,6 +1,7 @@
 ﻿using Data.Commands;
 using Data.Converters;
 using Data.Log;
+using LunarAPIClient;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using System;
@@ -18,7 +19,7 @@ namespace api.CommandProcessing
             IAsyncCollector<string> logEntries,
             IAsyncCollector<SignalRMessage> messages)
         {
-            LogEntry entry = null;
+            LogEntry entry;
 
             if (appendLogItemCommand.Payload is PlaintextPayloadValue plaintextPayloadValue)
             {
@@ -42,8 +43,11 @@ namespace api.CommandProcessing
             await messages.AddAsync(
                 new SignalRMessage
                 {
-                    Target = "newMessage",
-                    Arguments = new[] { entry }
+                    Target = SignalRCommands.NewLogEntry,
+                    Arguments = new[] 
+                    { 
+                        entry
+                    }
                 }
             );
         }

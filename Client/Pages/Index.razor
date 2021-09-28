@@ -1,15 +1,18 @@
 ﻿@page "/"
-@inject HttpClient client
+@using Client.Components.Mission
+@inject Mission mission
 
 <AuthorizeView>
     <Authorized>
-        <Client.Components.Console.Console />
+        <MissionView CurrentMission=@mission />
     </Authorized>
     <NotAuthorized>
         <a href="authentication/login">Log in</a>
     </NotAuthorized>
 </AuthorizeView>
 
+
 @code {
-    public string BaseAddress => client.BaseAddress.ToString();
+   
+
 }

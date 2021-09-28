@@ -1,38 +1,48 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 
 namespace Client.State
 {
     public class StateContainer : StateObject
     {
-        public StateContainer(Uri baseAddress)
+        public StateContainer(Uri baseAddress, string apiVersion, string hubName)
         {
-            BaseAddress = baseAddress;
-            Mission = new Mission();
-            Mission.OnChanged += Mission_OnChanged;
-            User = new User();
-            User.OnChanged += User_OnChanged;
-            Console = new Console();
-            Console.OnChanged += Console_OnChanged;
-        }
 
-        private void Console_OnChanged()
-        {
-            NotifyStateChanged();
+            Api = new(baseAddress, apiVersion, hubName);
+            Mission = new();
+            User = new();
+            User.OnChanged += User_OnChanged;
         }
 
         private void User_OnChanged()
         {
-            NotifyStateChanged();
+            var all = new Log
+            {
+                Name = "Mission Log"
+            };
+
+            //var justMe = new Log
+            //{
+            //    Name = "My Log Entries"
+            //};
+
+            //justMe.Filters.Add(new LogFilter
+            //{
+            //    UserIDMatch = new Regex($"^{User.Id}$")
+            //});
+
+            Mission.UpdateLogs(new[] { all/*, justMe */});
         }
 
-        private void Mission_OnChanged()
+        public void UpdateUser(Data.Users.User newUser)
         {
-            NotifyStateChanged();
+            User.Id = newUser.Id;
+            User.Name = newUser.Name;
+            User.PreferredUserName = newUser.PreferredUserName;
         }
 
-        public Uri BaseAddress {  get; set; }
-        public Mission Mission { get; } 
+        public Api Api { get; }
+        public Mission Mission { get; }
         public User User { get; }
-        public Console Console { get; }
     }
 }

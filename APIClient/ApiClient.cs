@@ -8,6 +8,7 @@ namespace LunarAPIClient
 {
     public abstract class ApiClient
     {
+        protected abstract string ApiVersion { get; }
         protected abstract string ApiEndpoint { get; }
         protected readonly HttpClient httpClient;
 
@@ -17,6 +18,6 @@ namespace LunarAPIClient
         }
 
 
-        public Uri BaseAddress => httpClient.BaseAddress ?? new Uri("https://www.google.ca"); // Should never happen
+        public Uri BaseAddress => httpClient.BaseAddress ?? new Uri("https://www.bing.com"); // Should never happen
     }
 }

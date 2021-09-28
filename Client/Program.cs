@@ -14,7 +14,12 @@ builder.RootComponents.Add<App>("#app");
 
 var baseAddress = new Uri(builder.Configuration["API_Prefix"] ?? builder.HostEnvironment.BaseAddress);
 
-builder.Services.AddSingleton<StateContainer>(new StateContainer(baseAddress));
+builder.Services.AddState(
+    new StateContainer(
+        baseAddress, 
+        builder.Configuration["API_Version"] ?? "v1.0", 
+        builder.Configuration["SignalRHubName"] ?? "commands"));
+
 builder.Services.AddBlazorFluentUI();
 
 builder.Services.AddMsalAuthentication(options =>
@@ -38,5 +43,6 @@ builder.Services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().
 builder.Services.AddTransient<ILogEntryClient, LogEntryClient>();
 builder.Services.AddTransient<ICommandClient, CommandClient>();
 builder.Services.AddTransient<IHubConnectionFactory, HubConnectionFactory>();
+builder.Services.AddTransient<IUserClient, UserClient>();
 
 await builder.Build().RunAsync();

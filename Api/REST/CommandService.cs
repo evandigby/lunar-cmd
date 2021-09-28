@@ -20,7 +20,7 @@ namespace api.REST
         [FunctionName("SendCommand")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "commands")] HttpRequest req,
-            [EventHub("commands", Connection = "EventHubs")] IAsyncCollector<string> commands,
+            [EventHub("%EventHubName%", Connection = "EventHubs")] IAsyncCollector<string> commands,
             ILogger log,
             CancellationToken cancellationToken)
         {

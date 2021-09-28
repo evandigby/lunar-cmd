@@ -9,24 +9,24 @@ namespace Client.RealTimeCommunication
 {
     public class HubConnectionFactory : IHubConnectionFactory
     {
-        private StateContainer _state;
+        private readonly Api apiState;
 
-        public HubConnectionFactory(StateContainer state)
+        public HubConnectionFactory(Api apiState)
         {
-            _state = state;
+            this.apiState = apiState;
         }
 
-        public async Task<HubConnection> ConnectHub<T>(string commandName, Action<StateContainer, T> onReceive)
+        public async Task<HubConnection> ConnectHub<T>(string commandName, Action<T> onReceive)
         {
             var hubConnection = new HubConnectionBuilder()
-                .WithUrl($"{_state.BaseAddress}api/")
+                .WithUrl($"{apiState.BaseAddress}api/{apiState.ApiVersion}/")
                 .AddJsonProtocol(options =>
                 {
                     options.PayloadSerializerOptions = ConverterOptions.JsonSerializerOptions;
                 })
                 .Build();
 
-            hubConnection.On<T>(commandName, (item) => onReceive(_state, item));
+            hubConnection.On<T>(commandName, (item) => onReceive(item));
 
             await hubConnection.StartAsync();
 

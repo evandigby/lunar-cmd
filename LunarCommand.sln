@@ -12,7 +12,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "api", "Api\api.csproj", "{CEC463A1-0431-4F47-9E17-EBF2BF172B45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LunarAPIClient", "APIClient\LunarAPIClient.csproj", "{8683E487-8497-401B-A678-354348AC7205}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LunarAPIClient", "APIClient\LunarAPIClient.csproj", "{8683E487-8497-401B-A678-354348AC7205}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

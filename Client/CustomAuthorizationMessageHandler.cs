@@ -12,7 +12,7 @@ namespace Client
             : base(provider, navigationManager)
         {
             ConfigureHandler(
-                authorizedUrls: new[] { state.BaseAddress.ToString() },
+                authorizedUrls: new[] { state.Api.BaseAddress.ToString() },
                 scopes: new[] { "https://lunarcommand.onmicrosoft.com/cnc/LogEntries.Read", "https://lunarcommand.onmicrosoft.com/cnc/LogEntries.Write" });
         }
     }

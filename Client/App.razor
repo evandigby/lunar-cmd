@@ -1,6 +1,8 @@
-﻿<CascadingAuthenticationState>
+﻿@inject StateContainer state
+
+<CascadingAuthenticationState>
     <Theme>
-        <Stack Style="height:100vh;border: 1px solid red;" VerticalFill>
+        <Stack VerticalFill Style="height:100vh">
             <Router AppAssembly="@typeof(App).Assembly">
                 <Found Context="routeData">
                     <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
@@ -29,3 +31,11 @@
         </Stack>
     </Theme>
 </CascadingAuthenticationState>
+
+@code
+{
+    protected override void OnInitialized()
+    {
+        state.OnChanged += StateHasChanged;
+    }
+}

@@ -1,0 +1,32 @@
+﻿@attribute [Authorize]
+@using Client.RealTimeCommunication
+@using Data.Converters
+@using System.Linq
+@using LunarAPIClient
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.DependencyInjection
+@using System.Text.Json
+
+<Stack VerticalFill Style="border:1px solid black;width:100%">
+    <Stack Horizontal Style="border-bottom:1px solid black;width:100%">
+        <Label>@CurrentLog.Name</Label>: 
+    </Stack>
+    <Stack VerticalFill VerticalAlign="Alignment.End" Style="width:100%" Tokens="@(new StackTokens() { ChildrenGap = new [] {20d}})">
+        @foreach (var entry in CurrentLog.LogEntries)
+        {
+            <LogEntryView Value=@entry/>
+        }
+    </Stack>
+</Stack>
+
+@code {
+    [Parameter]
+    public Log CurrentLog { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        CurrentLog.OnChanged += StateHasChanged;
+    }
+}

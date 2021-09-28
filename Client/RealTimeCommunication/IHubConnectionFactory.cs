@@ -7,6 +7,6 @@ namespace Client.RealTimeCommunication
 {
     public interface IHubConnectionFactory
     {
-        Task<HubConnection> ConnectHub<T>(string commandName, Action<StateContainer, T> onReceive);
+        Task<HubConnection> ConnectHub<T>(string commandName, Action<T> onReceive);
     }
 }

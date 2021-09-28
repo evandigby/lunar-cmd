@@ -15,8 +15,8 @@ namespace api.EventHubs
     {
         [FunctionName("CommandWriter")]
         public static async Task Run(
-            [EventHubTrigger("commands", Connection = "EventHubsWrite")] EventData[] events, 
-            [CosmosDB("lunar-command", "commands", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> commands,
+            [EventHubTrigger("%EventHubName%", Connection = "EventHubsWrite")] EventData[] events, 
+            [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBCommandsCollectionName%", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> commands,
             ILogger log)
         {
             if (!events.Any())

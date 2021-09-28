@@ -9,7 +9,8 @@ namespace LunarAPIClient
         {
         }
 
-        protected override string ApiEndpoint => "/api/log-entries";
+        protected override string ApiVersion => "v1.0";
+        protected override string ApiEndpoint => $"/api/{ApiVersion}/log-entries";
 
         public async Task<IEnumerable<LogEntry>> GetLogEntriesByMissionId(Guid missionId, CancellationToken cancellationToken)
         {
