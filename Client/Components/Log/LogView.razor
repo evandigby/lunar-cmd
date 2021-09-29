@@ -2,31 +2,31 @@
 @using Client.RealTimeCommunication
 @using Data.Converters
 @using System.Linq
+@using Data.Log
 @using LunarAPIClient
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Microsoft.AspNetCore.SignalR.Client
 @using Microsoft.Extensions.DependencyInjection
 @using System.Text.Json
+@using System.Collections.ObjectModel
 
-<Stack VerticalFill Style="border:1px solid black;width:100%">
-    <Stack Horizontal Style="border-bottom:1px solid black;width:100%">
-        <Label>@CurrentLog.Name</Label>: 
-    </Stack>
-    <Stack VerticalFill VerticalAlign="Alignment.End" Style="width:100%" Tokens="@(new StackTokens() { ChildrenGap = new [] {20d}})">
-        @foreach (var entry in CurrentLog.LogEntries)
-        {
-            <LogEntryView Value=@entry/>
-        }
-    </Stack>
-</Stack>
+<fluent-data-grid style="max-height: 400px; overflow-y: auto">
+    @foreach (var entry in CurrentLog.LogEntries)
+    {
+        <fluent-data-grid-row row-index=@(rowindex++)>
+            <fluent-data-grid-cell grid-column=1>@entry.LoggedAt</fluent-data-grid-cell>
+            <fluent-data-grid-cell grid-column=2>@entry.User.Name</fluent-data-grid-cell>
+            <fluent-data-grid-cell grid-column=3><LogEntryView Value=@entry /></fluent-data-grid-cell>
+        </fluent-data-grid-row>
+    }
+</fluent-data-grid>
+
+    
 
 @code {
     [Parameter]
     public Log CurrentLog { get; set; } = new();
 
-    protected override void OnInitialized()
-    {
-        CurrentLog.OnChanged += StateHasChanged;
-    }
+    private int rowindex = 0;
 }

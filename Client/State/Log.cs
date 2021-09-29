@@ -7,47 +7,14 @@ using System.Linq;
 
 namespace Client.State
 {
-    public class Log : StateObject
+    public class Log
     {
-        private readonly List<LogEntry> _entries = new();
+        public IEnumerable<LogEntry> LogEntries { get; set; } = Enumerable.Empty<LogEntry>();
 
-        public IReadOnlyCollection<LogEntry> LogEntries => _entries;
+        public Guid Id { get; set; } = Guid.Empty;
 
-        public void UpdateLogEntries(IEnumerable<LogEntry> entries)
-        {
-            _entries.Clear();
-            _entries.AddRange(entries);
-            NotifyStateChanged();
-        }
+        public string Name { get; set; } = string.Empty;
 
-        private Guid _id = Guid.Empty;
-        public Guid Id
-        {
-            get => _id;
-            set
-            {
-                if (_id == value)
-                    return;
-
-                _id = value;
-                NotifyStateChanged();
-            }
-        }
-
-        private string _name = string.Empty;
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                if (_name == value)
-                    return;
-
-                _name = value;
-                NotifyStateChanged();
-            }
-        }
-
-        public ObservableCollection<LogFilter> Filters { get; set; } = new();
+        public IEnumerable<LogFilter> Filters { get; set; } = Enumerable.Empty<LogFilter>();
     }
 }

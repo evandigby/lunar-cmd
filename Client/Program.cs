@@ -1,4 +1,3 @@
-using BlazorFluentUI;
 using Client;
 using Client.RealTimeCommunication;
 using Client.State;
@@ -19,8 +18,6 @@ builder.Services.AddState(
         baseAddress, 
         builder.Configuration["API_Version"] ?? "v1.0", 
         builder.Configuration["SignalRHubName"] ?? "commands"));
-
-builder.Services.AddBlazorFluentUI();
 
 builder.Services.AddMsalAuthentication(options =>
 {

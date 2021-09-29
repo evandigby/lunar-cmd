@@ -1,5 +1,4 @@
-﻿@using BlazorFluentUI.Routing
-@using Client.Components.Log
+﻿@using Client.Components.Log
 @using Client.RealTimeCommunication
 @using Data.Log
 @using LunarAPIClient
@@ -11,45 +10,43 @@
 @inject ILogEntryClient logEntryClient
 @inject IHubConnectionFactory hubConnectionFactory
 @inject ICommandClient commandClient
+@inject Mission CurrentMission
+
 @implements IAsyncDisposable
 
-<Stack VerticalFill VerticalAlign="Alignment.End">
-    
-    <NavBar Header="One Giant Leap C&C">
-    
-    </NavBar>
+<EditForm Model=@CurrentMission OnValidSubmit=@Enter>
+    <FluentTextField @bind-Value=CurrentMission.CurrentEntryText />
+    <FluentButton type="submit">Send</FluentButton>
+</EditForm>
 
+<FluentTabs>
     @foreach (var log in CurrentMission.Logs)
     {
-        <LogView CurrentLog=@log />
+        <FluentTab>@log.Name</FluentTab>
+        <FluentTabPanel><LogView CurrentLog=@log /></FluentTabPanel>
     }
-    <form @onsubmit=Enter>
-        <Stack Horizontal>
-            <StackItem Grow=1>
-                <TextField @bind-Value=CurrentMission.CurrentEntryText />
-            </StackItem>
-            <DefaultButton Text="Send" />
-        </Stack>
-    </form>
-</Stack>
+</FluentTabs>
 
 
 @code {
-    [Parameter]
-    public Mission CurrentMission { get; set; } = new();
-
-    protected override async Task OnInitializedAsync()
+    protected async override Task OnInitializedAsync()
     {
-
-        CurrentMission.OnChanged += StateHasChanged;
-
         var src = new CancellationTokenSource();
+            
         state.UpdateUser(await userClient.Me(src.Token));
+
         await LoadLogEntries();
+
+        StateHasChanged();
 
         hubConnection = await hubConnectionFactory.ConnectHub<LogEntry>(
             SignalRCommands.NewLogEntry, 
-            (logEntry) => CurrentMission.AddLogEntry(logEntry));
+            (logEntry) => {
+                CurrentMission.AddLogEntry(logEntry);
+                StateHasChanged();
+            });
+
+        await base.OnInitializedAsync();
     }
 
     private async Task LoadLogEntries()
@@ -60,7 +57,9 @@
         {
             var entries = await logEntryClient.GetLogEntriesByMissionId(Guid.Empty, src.Token);
 
-            CurrentMission.AddLogEntries(entries.OrderBy(e => e.LoggedAt));
+            CurrentMission.AddLogEntries(entries.OrderByDescending(e => e.LoggedAt));
+
+            StateHasChanged();
         }
         catch (AccessTokenNotAvailableException exception)
         {
@@ -78,7 +77,7 @@
         }
     }
 
-    private async Task Enter()
+    private async Task Enter(EditContext editContext)
     {
         var cmd = new AppendLogItemCommand
         {
@@ -100,5 +99,7 @@
         }
 
         CurrentMission.CurrentEntryText = "";
+
+        StateHasChanged();
     }
 }

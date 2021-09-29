@@ -2,7 +2,7 @@
 
 namespace Client.State
 {
-    public class Api : StateObject
+    public class Api
     {
         public Api(Uri baseAddress, string apiVersion, string hubName)
         {

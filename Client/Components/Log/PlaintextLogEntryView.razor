@@ -1,21 +1,8 @@
 ﻿@using Data.Log
-<DocumentCard Type="DocumentCardType.Compact">
-    <DocumentCardDetails>
-        <DocumentCardTitle ShouldTruncate=false Title=@Value.Value />
-        <DocumentCardActivity Activity=@Activity People=@People />
-    </DocumentCardDetails>
-</DocumentCard>
+
+@Value.Value
 
 @code {
     [Parameter, EditorRequired]
     public PlaintextLogEntry Value { get; set; } = new();
-
-    private string Activity => $"Logged at {Value.LoggedAt}";
-    private DocumentCardActivityPerson[] People => new DocumentCardActivityPerson[]
-    {
-        new DocumentCardActivityPerson
-        {
-            Name = Value.User.Name
-        }
-    };
 }
