@@ -1,10 +1,4 @@
-﻿@using Client.Components.Log
-@using Client.RealTimeCommunication
-@using Data.Log
-@using LunarAPIClient
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-@using Microsoft.AspNetCore.SignalR.Client
-@inject StateContainer state
+﻿@inject StateContainer state
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IUserClient userClient
 @inject ILogEntryClient logEntryClient
@@ -14,39 +8,49 @@
 
 @implements IAsyncDisposable
 
-<EditForm Model=@CurrentMission OnValidSubmit=@Enter>
-    <FluentTextField @bind-Value=CurrentMission.CurrentEntryText />
-    <FluentButton type="submit">Send</FluentButton>
-</EditForm>
-
-<FluentTabs>
-    @foreach (var log in CurrentMission.Logs)
-    {
-        <FluentTab>@log.Name</FluentTab>
-        <FluentTabPanel><LogView CurrentLog=@log /></FluentTabPanel>
-    }
-</FluentTabs>
-
+<div style="position:absolute;height: 75vh;width: 75vw;left:12.5vw;top:12.5vh;display: flex;flex-direction: column;border:1px solid black;">
+    <div style="overflow: auto;flex-grow:1">
+        <FluentTabs>
+            @foreach (var log in CurrentMission.Logs)
+            {
+                <FluentTab>@log.Name</FluentTab>
+                <FluentTabPanel><LogView CurrentLog=@log /></FluentTabPanel>
+            }
+        </FluentTabs>
+    </div>
+    <div style="width: 100%;overflow: hidden;flex-shrink: 0;padding:2px;">
+        <EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter>
+            <div style="display: flex; flex-direction: row;">
+                <InputText style="flex-grow:1;margin:2px" @bind-Value=@CurrentMission.CurrentEntryText />
+                <FluentButton style="flex-shrink: 0;margin:2px" type="submit">Send</FluentButton>
+            </div>
+        </EditForm>
+    </div>
+</div>
 
 @code {
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var src = new CancellationTokenSource();
-            
-        state.UpdateUser(await userClient.Me(src.Token));
+        if (firstRender)
+        {
+            var src = new CancellationTokenSource();
 
-        await LoadLogEntries();
+            state.UpdateUser(await userClient.Me(src.Token));
 
-        StateHasChanged();
+            await LoadLogEntries();
 
-        hubConnection = await hubConnectionFactory.ConnectHub<LogEntry>(
-            SignalRCommands.NewLogEntry, 
-            (logEntry) => {
-                CurrentMission.AddLogEntry(logEntry);
-                StateHasChanged();
-            });
+            StateHasChanged();
 
-        await base.OnInitializedAsync();
+            hubConnection = await hubConnectionFactory.ConnectHub<LogEntry>(
+                SignalRCommands.NewLogEntry,
+                (logEntry) =>
+                {
+                    CurrentMission.AddLogEntry(logEntry);
+                    StateHasChanged();
+                });
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     private async Task LoadLogEntries()
@@ -80,12 +84,12 @@
     private async Task Enter(EditContext editContext)
     {
         var cmd = new AppendLogItemCommand
-        {
-            Payload = new PlaintextPayloadValue
             {
-                Value = CurrentMission.CurrentEntryText
-            }
-        };
+                Payload = new PlaintextPayloadValue
+                {
+                    Value = CurrentMission.CurrentEntryText
+                }
+            };
 
         var src = new CancellationTokenSource();
 

@@ -1,4 +1,5 @@
 ﻿using Data.Log;
+using Client.State.LogState;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,14 +30,7 @@ namespace Client.State
         {
             foreach (var log in Logs)
             {
-                if (log.Filters.Any())
-                {
-                    log.LogEntries = _logEntries.Where(e => log.Filters.Any(f => f.Matches(e))).ToList();
-                }
-                else
-                {
-                    log.LogEntries = _logEntries.ToList();
-                }
+                log.UpdateLogEntries(_logEntries.AsQueryable());
             }
         }
     }

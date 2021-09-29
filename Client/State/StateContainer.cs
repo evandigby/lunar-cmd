@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Client.State.LogState;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -12,19 +13,14 @@ namespace Client.State
 
         private readonly Log mainLog = new()
         {
-            Name = MainLogName
+            Name = MainLogName,
+            Filters = new List<ILogFilter>() { new EverythingLogFilter() }
         };
 
         private readonly Log currentUserLog = new()
         {
             Name = CurrentUserLogName,
-            Filters = new List<LogFilter>()
-            {
-                new LogFilter
-                {
-                    UserIDMatch = new Regex($"^$")
-                }
-            }
+            Filters = new List<ILogFilter>() { new UserIDLogFilter("") }
         };
 
         public StateContainer(Uri baseAddress, string apiVersion, string hubName)
@@ -47,7 +43,11 @@ namespace Client.State
                 Name = newUser.Name,
                 PreferredUserName = newUser.PreferredUserName
             };
-            currentUserLog.Filters.Single().UserIDMatch = new Regex($"^{newUser.Id}$");
+
+            if (currentUserLog.Filters.Single() is UserIDLogFilter userIDLogFilter)
+            {
+                userIDLogFilter.UpdateUserID(newUser.Id);
+            }
         }
         
         public Api Api { get; set; }
