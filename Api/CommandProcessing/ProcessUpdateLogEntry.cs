@@ -60,6 +60,9 @@ namespace api.CommandProcessing
                 throw new Exception("Unknown log entry type");
             }
 
+            if (existingEntry.UpdatedAt == default)
+                existingEntry.UpdatedAt = existingEntry.LoggedAt;
+
             newEntry.Id = existingEntry.Id;
             newEntry.MissionId = existingEntry.MissionId;
             newEntry.User = updateLogEntryCommand.User;
