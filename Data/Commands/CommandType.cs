@@ -2,6 +2,7 @@
 {
     public enum CommandType
     {
-        AppendLogItem
+        AppendLogItem,
+        UpdateLogItem
     }
 }

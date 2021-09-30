@@ -42,12 +42,27 @@
             StateHasChanged();
 
             hubConnection = await hubConnectionFactory.ConnectHub<LogEntry>(
-                SignalRCommands.NewLogEntry,
-                (logEntry) =>
-                {
-                    CurrentMission.AddLogEntry(logEntry);
-                    StateHasChanged();
-                });
+                new HubCommand<LogEntry>[]
+                    {
+                        new HubCommand<LogEntry>
+                        {
+                            CommandName = SignalRCommands.NewLogEntry,
+                            OnReceive = (logEntry) =>
+                            {
+                                CurrentMission.AddLogEntry(logEntry);
+                                StateHasChanged();
+                            }
+                        },
+                        new HubCommand<LogEntry>
+                        {
+                            CommandName = SignalRCommands.UpdateLogEntry,
+                            OnReceive = (logEntry) =>
+                            {
+                                CurrentMission.UpdateLogEntry(logEntry);
+                                StateHasChanged();
+                            }
+                        }
+                    });
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -83,7 +98,7 @@
 
     private async Task Enter(EditContext editContext)
     {
-        var cmd = new AppendLogItemCommand
+        var cmd = new AppendLogEntryCommand
             {
                 Payload = new PlaintextPayloadValue
                 {

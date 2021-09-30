@@ -8,7 +8,7 @@ namespace Client.State
 {
     public class Mission
     {
-        private readonly List<LogEntry> _logEntries = new();
+        private List<LogEntry> _logEntries = new();
 
         public IEnumerable<Log> Logs { get; set; } = Enumerable.Empty<Log>();
         public Guid Id { get; set; } = Guid.Empty;
@@ -17,6 +17,11 @@ namespace Client.State
         public void AddLogEntry(LogEntry entry)
         {
             _logEntries.Add(entry);
+            UpdateLogs();
+        }
+        public void UpdateLogEntry(LogEntry entry)
+        {
+            _logEntries = _logEntries.Where(e => e.Id != entry.Id).Concat(new[] { entry }).ToList();
             UpdateLogs();
         }
 

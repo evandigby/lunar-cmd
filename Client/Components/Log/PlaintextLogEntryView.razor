@@ -1,6 +1,40 @@
-﻿@Value.Value
+﻿@implements IEditableLogEntryView
+
+    <div style="white-space:normal;padding: 0 10px 10px; color: var(--neutral-foreground-rest);">
+        @if (Editing)
+        {
+            <FluentTextArea Resize=Resize.Vertical @bind-Value=NewValue style="width:100%" />
+            @*<InputText style="width:100%;margin:2px" @bind-Value=NewValue />*@
+        }
+        else
+        {
+            @Value.Value
+        }
+    </div>
 
 @code {
     [Parameter, EditorRequired]
     public PlaintextLogEntry Value { get; set; } = new();
+
+    [Parameter]
+    public bool Editing { get; set; } = false;
+
+    private string NewValue { get; set; } = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (!Editing)
+            NewValue = Value.Value;
+
+        base.OnParametersSet();
+    }
+
+    public UpdateLogEntryCommand UpdateCommand => new UpdateLogEntryCommand
+        {
+            LogEntryId = Value.Id,
+            Payload = new PlaintextPayloadValue
+            {
+                Value = NewValue
+            }
+        };
 }

@@ -1,10 +1,99 @@
-﻿
-@if (Value is PlaintextLogEntry plaintextLogEntry)
-{
-    <PlaintextLogEntryView Value=plaintextLogEntry />
-}
+﻿@inject ICommandClient commandClient
 
+<div style="display:flex;flex-direction:column">
+    <div style="flex-wrap:wrap;flex-grow:1">
+        @if (Value is PlaintextLogEntry plaintextLogEntry)
+        {
+            <PlaintextLogEntryView @ref="updateableLogEntryView" Value=plaintextLogEntry Editing=@Editing />
+        }
+    </div>
+    @if (CanEdit)
+    {
+        <div style="display:flex;flex-directon:row;align-content:center">
+            @if (Editing)
+            {
+                <FluentButton style="margin: 2px" @onclick="Update">Update</FluentButton>
+            }
+            <FluentButton style="margin: 2px" @onclick="ToggleEdit">
+                @if (Editing)
+                {
+                    <span>Cancel</span>
+                }
+                else
+                {
+                    <span>Edit</span>
+                }
+            </FluentButton>
+
+
+            @if (Value.IsEdited)
+            {
+                <FluentButton style="margin: 2px" @onclick="ToggleHistory">
+                    @if (ShowHistory)
+                    {
+                        <span>Hide Edit History</span>
+                    }
+                    else
+                    {
+                        <span>Show Edit History</span>
+                    }
+                </FluentButton>
+            }
+        </div>
+    }
+    @if (ShowHistory && Value.EditHistory != null)
+    {
+        foreach (var historicalEntry in Value.EditHistory.OrderByDescending(e => e.UpdatedAt))
+        {
+            <FluentDivider />
+            @historicalEntry.UpdatedAt
+            <LogEntryView Value=historicalEntry CanEdit=false />
+        }
+    }
+</div>
 @code {
     [Parameter]
     public LogEntry Value { get; set; } = new PlaintextLogEntry();
+
+    [Parameter]
+    public bool CanEdit { get; set; } = false;
+
+    public bool Editing { get; set; } = false;
+    public bool ShowHistory { get; set; } = false;
+
+    IEditableLogEntryView? updateableLogEntryView = null;
+
+    private void ToggleEdit(EventArgs args)
+    {
+        Editing = !Editing;
+    }
+
+    private void ToggleHistory(EventArgs args)
+    {
+        ShowHistory = !ShowHistory;
+    }
+
+    private async Task Update(EventArgs args)
+    {
+        if (updateableLogEntryView == null)
+            return;
+
+        var cmd = updateableLogEntryView.UpdateCommand;
+
+        var src = new CancellationTokenSource();
+
+        try
+        {
+            await commandClient.SendCommand(cmd, src.Token);
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+
+        Editing = false;
+
+        StateHasChanged();
+    }
+
 }

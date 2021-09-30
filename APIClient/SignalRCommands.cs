@@ -9,5 +9,6 @@ namespace LunarAPIClient
     public static class SignalRCommands
     {
         public const string NewLogEntry = "newLogEntry";
+        public const string UpdateLogEntry = "updateLogEntry";
     }
 }

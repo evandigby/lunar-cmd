@@ -8,28 +8,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace api.CommandProcessing
 {
-    internal static class ProcessAppendLogItem
+    internal static class ProcessAppendLogEntry
     {
         public static async Task Process(
-            AppendLogItemCommand appendLogItemCommand,
+            AppendLogEntryCommand appendLogEntryCommand,
             IAsyncCollector<string> logEntries,
-            IAsyncCollector<SignalRMessage> messages)
+            IAsyncCollector<SignalRMessage> messages,
+            CancellationToken cancellationToken)
         {
             LogEntry entry;
 
-            if (appendLogItemCommand.Payload is PlaintextPayloadValue plaintextPayloadValue)
+            if (appendLogEntryCommand.Payload is PlaintextPayloadValue plaintextPayloadValue)
             {
                 entry = new PlaintextLogEntry
                 {
-                    Id = Guid.NewGuid(),
-                    MissionId = appendLogItemCommand.MissionId,
                     EntryType = LogEntryType.Plaintext,
-                    User = appendLogItemCommand.User,
-                    LoggedAt = DateTime.UtcNow,
                     Value = plaintextPayloadValue.Value
                 };
             }
@@ -38,7 +36,14 @@ namespace api.CommandProcessing
                 throw new Exception("Unknown log entry type");
             }
 
-            await logEntries.AddAsync(entry.Serialize());
+            entry.Id = Guid.NewGuid();
+            entry.MissionId = appendLogEntryCommand.MissionId;
+            entry.User = appendLogEntryCommand.User;
+            entry.LoggedAt = DateTime.UtcNow;
+            entry.UpdatedAt = DateTime.UtcNow;
+            entry.EditHistory = Enumerable.Empty<LogEntry>().ToList();
+
+            await logEntries.AddAsync(entry.Serialize(), cancellationToken);
 
             await messages.AddAsync(
                 new SignalRMessage
@@ -48,8 +53,8 @@ namespace api.CommandProcessing
                     { 
                         entry
                     }
-                }
-            );
+                }, 
+                cancellationToken);
         }
     }
 }

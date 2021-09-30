@@ -1,17 +1,36 @@
-﻿@attribute [Authorize]
+﻿@inject StateContainer state
 
-<fluent-data-grid id="test" generate-header="none" grid-template-columns="max-content max-content auto">
-    <fluent-data-grid-row>
-        @foreach (var entry in CurrentLog.LogEntries)
-        {
-            <fluent-data-grid-cell grid-column="1">@entry.LoggedAt</fluent-data-grid-cell>
-            <fluent-data-grid-cell grid-column="2">@entry.User.Name</fluent-data-grid-cell>
-            <fluent-data-grid-cell grid-column="3"><LogEntryView Value=@entry /></fluent-data-grid-cell>
-        }
+@attribute [Authorize]
+
+<fluent-data-grid id="test" generate-header="none" grid-template-columns="15% 15% 60%">
+    <fluent-data-grid-row row-type="sticky-header">
+        <fluent-data-grid-cell cell-type="columnheader" grid-column="1">Logged At</fluent-data-grid-cell>
+        <fluent-data-grid-cell cell-type="columnheader" grid-column="2">Logged By</fluent-data-grid-cell>
+        <fluent-data-grid-cell cell-type="columnheader" grid-column="3">Log Entry</fluent-data-grid-cell>
     </fluent-data-grid-row>
+    @foreach (var entry in CurrentLog.LogEntries)
+    {
+        var canEdit = state.User.Id == entry.User.Id;
+
+        <fluent-data-grid-row>
+            <fluent-data-grid-cell grid-column="1">
+                @entry.LoggedAt
+                @if (entry.IsEdited)
+                {
+                    <FluentDivider />
+                    <i>Edited on @entry.UpdatedAt</i>
+                }
+            </fluent-data-grid-cell>
+            <fluent-data-grid-cell grid-column="2">@entry.User.Name</fluent-data-grid-cell>
+            <fluent-data-grid-cell grid-column="3">
+                <LogEntryView Value=@entry CanEdit=canEdit />
+            </fluent-data-grid-cell>
+        </fluent-data-grid-row>
+    }
 </fluent-data-grid>
 
 @code {
     [Parameter]
     public Log CurrentLog { get; set; } = new();
 }
+

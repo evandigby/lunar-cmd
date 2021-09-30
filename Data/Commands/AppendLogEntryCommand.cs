@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Data.Commands
 {
-    public class AppendLogItemCommand : Command
+    public class AppendLogEntryCommand : Command
     {
-        public AppendLogItemCommand() {
-            Name = nameof(AppendLogItemCommand);
+        public AppendLogEntryCommand() {
+            Name = nameof(AppendLogEntryCommand);
         }
 
         public override CommandType CommandType => CommandType.AppendLogItem;

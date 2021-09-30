@@ -16,7 +16,8 @@ namespace Data.Converters
         {
             return type switch
             {
-                CommandType.AppendLogItem => JsonSerializer.Deserialize<AppendLogItemCommand>(document.RootElement.GetRawText(), options),
+                CommandType.AppendLogItem => JsonSerializer.Deserialize<AppendLogEntryCommand>(document.RootElement.GetRawText(), options),
+                CommandType.UpdateLogItem => JsonSerializer.Deserialize<UpdateLogEntryCommand>(document.RootElement.GetRawText(), options),  
                 _ => throw new JsonException(),
             };
         }
