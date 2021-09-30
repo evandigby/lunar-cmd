@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using api.Auth;
 using Data.Commands;
-using Data.Converters;
-using Data.Log;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Extensions.Logging;
+using LunarAPIClient.CommandProcessors;
+using api.LogEntryRepository;
+using api.NotificationClient;
 
 namespace api.CommandProcessing
 {
@@ -35,20 +35,18 @@ namespace api.CommandProcessing
             var tokenSource = new CancellationTokenSource();
             var exceptions = new List<Exception>();
 
+            var logEntryRepository = new CosmosDBLogEntryRepository(logEntries, logEntryDocumentClient);
+            var signalRNotificationClient = new SignalRNotificationClient(messages);
+
+            var commandProcessor = new LunarAPIClient.CommandProcessors.CommandProcessor(logEntryRepository, signalRNotificationClient);
+
             foreach (var doc in input)
             {
                 try
                 {
                     var cmd = Command.Deserialize(doc.ToString());
 
-                    if (cmd is AppendLogEntryCommand appendLogEntryCommand)
-                    {
-                        await ProcessAppendLogEntry.Process(appendLogEntryCommand, logEntries, messages, tokenSource.Token);
-                    }
-                    else if (cmd is UpdateLogEntryCommand updateLogEntryCommand)
-                    {
-                        await ProcessUpdateLogEntry.Process(updateLogEntryCommand, logEntryDocumentClient, logEntries, messages, tokenSource.Token);
-                    }
+                    await commandProcessor.ProcessCommand(cmd, tokenSource.Token);
                 } 
                 catch (Exception ex)
                 {
