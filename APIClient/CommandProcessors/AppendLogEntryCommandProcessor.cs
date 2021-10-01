@@ -42,7 +42,7 @@ namespace LunarAPIClient.CommandProcessors
             {
                 CommandTarget = SignalRCommands.NewLogEntry,
                 Audience = Audience.Everyone,
-                Message = entry.Serialize()
+                Message = entry
             });
 
             return Task.CompletedTask;

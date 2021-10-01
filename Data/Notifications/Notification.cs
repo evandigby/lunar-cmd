@@ -10,6 +10,6 @@ namespace Data.Notifications
     {
         public string CommandTarget { get; set; }
         public Audience Audience {  get; set; }
-        public string Message {  get; set; }
+        public object Message {  get; set; }
     }
 }
