@@ -8,18 +8,23 @@
         {
             <PlaintextLogEntryView @ref="updateableLogEntryView" Value=plaintextLogEntry Editing=@Editing />
         }
+        else if (Value is PlaceholderLogEntry placeholderLogEntry)
+        {
+            <PlaceholderLogEntryView Value=placeholderLogEntry />
+        }
     </div>
     @if (Value.Attachments?.Count() > 0)
     {
-        <div>
+        <div style="display:flex;flex-direction:row;">
             @foreach (var attachment in Value.Attachments)
             {
+                var attachmentVal = attachment;
                 <LogEntryAttachmentView 
-                    Attachment=attachment 
+                    Attachment=attachmentVal 
                     LogEntryId=Value.Id 
-                    TotalParts=attachment.TotalParts 
-                    PartsUploaded=attachment.PartsUploaded 
-                    UploadComplete=attachment.UploadComplete />
+                    TotalParts=attachmentVal.TotalParts 
+                    PartsUploaded=attachmentVal.PartsUploaded 
+                    UploadComplete=attachmentVal.UploadComplete />
             }
         </div>
     }

@@ -42,16 +42,14 @@ namespace api.LogEntryRepository
 
         public async Task<LogEntry> CreatePlaceholderById(Guid missionId, Guid id, IEnumerable<LogEntryAttachment> attachments, CancellationToken cancellationToken)
         {
-            var docLink = LogEntryDocLink(id);
+            await logEntries.AddAsync(new PlaceholderLogEntry
+            {
+                Id = id,
+                MissionId = missionId,
+                Attachments = attachments.ToList(),
+            }.Serialize(), cancellationToken);
 
-            var newDoc = await logEntryDocumentClient.CreateDocumentAsync(docLink, 
-                new PlaceholderLogEntry { 
-                    Id = id,
-                    MissionId = missionId,
-                    Attachments = attachments.ToList(),
-                }, cancellationToken: cancellationToken);
-
-            return LogEntry.Deserialize(newDoc.Resource.ToString());
+            return await GetById(id, missionId, cancellationToken);
         }
 
         public async Task<LogEntry> GetById(Guid id, Guid missionId, CancellationToken cancellationToken)

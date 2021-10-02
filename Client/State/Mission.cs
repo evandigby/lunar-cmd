@@ -57,7 +57,10 @@ namespace Client.State
         {
             foreach (var log in Logs)
             {
-                log.UpdateLogEntries(_logEntries.AsQueryable());
+                log.UpdateLogEntries(
+                    _logEntries
+                        .Where(e => e is not PlaceholderLogEntry)
+                        .AsQueryable());
             }
         }
     }

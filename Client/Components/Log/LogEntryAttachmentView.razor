@@ -1,36 +1,37 @@
 ﻿@inject Mission mission
 @inject ILogEntryClient logEntryClient
 
-@if (Attachment.UploadComplete)
-{
-    @if (AttachmentData == null)
+<div style="flex-grow:0;flex-shrink:0;padding:2px;">
+    @if (Attachment.UploadComplete)
     {
-        <FluentSkeleton style="width:100px;height:100px" />
-    }
-    else
-    {
-        @if (@AttachmentData.DataURI.StartsWith("data:image/"))
+        @if (AttachmentData == null)
         {
-            <img src=@AttachmentData.DataURI style="max-width:5vw;max-height=5vh" @onclick=OnClick />
-
-            @if (ShowFullSize)
-            {
-                <FluentDialog style="text-align:center;vertical-align:middle" @onclick=OnClick>
-                    <img sytle="object-fit:contain;" src=@AttachmentData.DataURI @onclick=OnClick />
-                </FluentDialog>
-            }
+            <FluentSkeleton style="width:100px;height:100px" />
         }
         else
         {
-            <div>Invalid attachment type</div>
+            @if (@AttachmentData.DataURI.StartsWith("data:image/"))
+            {
+                <img src=@AttachmentData.DataURI style="max-width:5vw;max-height=5vh" @onclick=OnClick />
+
+                @if (ShowFullSize)
+                {
+                    <FluentDialog style="text-align:center;vertical-align:middle" @onclick=OnClick>
+                        <img sytle="object-fit:contain;" src=@AttachmentData.DataURI @onclick=OnClick />
+                    </FluentDialog>
+                }
+            }
+            else
+            {
+                <div>Invalid attachment type</div>
+            }
         }
     }
-}
-else
-{
-    <FluentProgressRing />
-}
-
+    else
+    {
+        <FluentProgressRing />
+    }
+</div>
 @code {
     [Parameter, EditorRequired]
     public Guid LogEntryId { get; set; } = Guid.Empty;

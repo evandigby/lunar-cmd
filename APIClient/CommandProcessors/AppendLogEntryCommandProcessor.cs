@@ -36,14 +36,14 @@ namespace LunarAPIClient.CommandProcessors
                 throw new Exception("invalid log entry id");
             }
 
-            LogEntry existingEntry = null;
+            LogEntry existingEntry;
             try
             {
                 existingEntry = await logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
             }
             catch (Exception)
             {
-                // TODO: Doesn't already exist. This is expected... but we need to catch more specific exceptions
+                // TODO: Doesn't already exist. This is expected in most cases... but we need to catch more specific exceptions
                 existingEntry = new PlaceholderLogEntry();
             }
 

@@ -31,15 +31,15 @@ namespace LunarAPIClient.CommandProcessors
         {
             if (cmd.Payload is BinaryPayloadValue binaryPayloadValue)
             {
-                Task<LogEntry> logEntryTask;
+                LogEntry logEntry;
                 try
                 {
-                    logEntryTask = _logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
+                    logEntry = await _logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
                 }
                 catch (Exception)
                 {
                     // TODO: Handle specific types of exceptions
-                    logEntryTask = _logEntryRepository.CreatePlaceholderById(
+                    logEntry = await _logEntryRepository.CreatePlaceholderById(
                         cmd.MissionId, 
                         cmd.LogEntryId, 
                         new LogEntryAttachment[]
@@ -55,15 +55,14 @@ namespace LunarAPIClient.CommandProcessors
                         },
                         cancellationToken);
                 }
-                var numUploadedTask = _logEntryAttachmentRepository.UploadAttachmentPart(
+
+                var numUploaded = await _logEntryAttachmentRepository.UploadAttachmentPart(
                     cmd.MissionId, 
                     cmd.LogEntryId, 
                     binaryPayloadValue,
                     _logEntryAttachmentContentTypeRepository.GetFileContentType(binaryPayloadValue.OriginalFileName),
                     cancellationToken);
 
-                var logEntry = await logEntryTask;
-                var numUploaded = await numUploadedTask;
 
                 logEntry.Attachments = logEntry.Attachments.Select(a =>
                 {
