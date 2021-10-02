@@ -1,0 +1,19 @@
+﻿@page "/mission/{missionId}"
+
+@if (MissionIDGuid == invalidGuid)
+{
+    <span>Invalid mission ID: @MissionID</span>
+}
+else
+{
+    <MissionView MissionID=MissionIDGuid />
+}
+
+@code {
+    [Parameter]
+    public string MissionID { get; set; } = string.Empty;
+
+    private readonly Guid invalidGuid = Guid.Parse("e256320d-fa93-4de3-9be9-c2ab0a5a89c7");
+
+    private Guid MissionIDGuid => Guid.TryParse(MissionID, out Guid _missionId) ? _missionId : invalidGuid;
+}

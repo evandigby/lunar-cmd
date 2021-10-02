@@ -1,4 +1,6 @@
-﻿@inject StateContainer state
+﻿@attribute [Authorize]
+
+@inject StateContainer state
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IUserClient userClient
 @inject ILogEntryClient logEntryClient
@@ -8,7 +10,7 @@
 
 @implements IAsyncDisposable
 
-<div style="position:absolute;height: 75vh;width: 75vw;left:12.5vw;top:12.5vh;display: flex;flex-direction: column;border:1px solid black;">
+<div style="width:100%;height:100%;display: flex;flex-direction: column;">
     <div style="overflow: auto;flex-grow:1">
         <FluentTabs>
             @foreach (var log in CurrentMission.Logs)
@@ -29,6 +31,9 @@
 </div>
 
 @code {
+    [Parameter, EditorRequired]
+    public Guid MissionID { get; set; } = Guid.Empty;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -74,7 +79,7 @@
 
         try
         {
-            var entries = await logEntryClient.GetLogEntriesByMissionId(Guid.Empty, src.Token);
+            var entries = await logEntryClient.GetLogEntriesByMissionId(MissionID, src.Token);
 
             CurrentMission.AddLogEntries(entries.OrderByDescending(e => e.LoggedAt));
 

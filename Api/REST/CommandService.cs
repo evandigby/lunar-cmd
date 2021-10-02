@@ -36,8 +36,6 @@ namespace api.REST
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, req.HttpContext.RequestAborted);
 
-            
-
             Command command;
             try
             {
