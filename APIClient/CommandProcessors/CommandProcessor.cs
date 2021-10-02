@@ -17,15 +17,18 @@ namespace LunarAPIClient.CommandProcessors
         private readonly ILogEntryRepository _logEntryRepository;
         private readonly INotificationClient _notificationClient;
         private readonly ILogEntryAttachmentRepository _logEntryAttachmentRepository;
+        private readonly ILogEntryAttachmentContentTypeRepository _logEntryAttachmentContentTypeRepository;
 
         public CommandProcessor(
-            ILogEntryRepository logEntryRepository, 
+            ILogEntryRepository logEntryRepository,
             INotificationClient notificationClient,
-            ILogEntryAttachmentRepository logEntryAttachmentRepository)
+            ILogEntryAttachmentRepository logEntryAttachmentRepository, 
+            ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository)
         {
             _logEntryRepository = logEntryRepository;
             _notificationClient = notificationClient;
             _logEntryAttachmentRepository = logEntryAttachmentRepository;
+            _logEntryAttachmentContentTypeRepository = logEntryAttachmentContentTypeRepository;
         }
 
         public async Task ProcessCommand(Command cmd, CancellationToken cancellationToken)
@@ -33,7 +36,7 @@ namespace LunarAPIClient.CommandProcessors
             ICommandProcessor processor;
             if (cmd is AppendLogEntryCommand)
             {
-                processor = new AppendLogEntryCommandProcessor();
+                processor = new AppendLogEntryCommandProcessor(_logEntryAttachmentContentTypeRepository);
             }
             else if (cmd is UpdateLogEntryCommand)
             {
@@ -41,7 +44,10 @@ namespace LunarAPIClient.CommandProcessors
             }
             else if (cmd is UploadAttachmentPartCommand)
             {
-                processor = new UploadAttachmentPartCommandProcessor(_logEntryAttachmentRepository, _logEntryRepository);
+                processor = new UploadAttachmentPartCommandProcessor(
+                    _logEntryAttachmentRepository, 
+                    _logEntryRepository, 
+                    _logEntryAttachmentContentTypeRepository);
             }
             else
             {

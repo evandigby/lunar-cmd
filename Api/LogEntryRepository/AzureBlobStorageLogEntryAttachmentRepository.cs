@@ -3,6 +3,7 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Data.Commands;
 using LunarAPIClient.LogEntryRepository;
+using Microsoft.AspNetCore.StaticFiles;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,7 +23,7 @@ namespace api.LogEntryRepository
             this.blobContainerClient = new BlobContainerClient(azureStorageConnectionString, containerName);
         }
 
-        public async Task<int> UploadAttachmentPart(Guid missionId, Guid logEntryId, BinaryPayloadValue binaryPayloadValue, CancellationToken cancellationToken)
+        public async Task<int> UploadAttachmentPart(Guid missionId, Guid logEntryId, BinaryPayloadValue binaryPayloadValue, string contentType, CancellationToken cancellationToken)
         {
             var blockBlobClient = blobContainerClient.GetBlockBlobClient(BlobPath(missionId, logEntryId, binaryPayloadValue.AttachmentId));
 
@@ -41,7 +42,7 @@ namespace api.LogEntryRepository
                     blockList.Value.UncommittedBlocks.OrderBy(b => BlockNumFromId(b.Name)).Select(b => b.Name),
                     httpHeaders: new BlobHttpHeaders
                     {
-                        ContentType = binaryPayloadValue.ContentType
+                        ContentType = contentType
                     },
                     cancellationToken: cancellationToken);
             }

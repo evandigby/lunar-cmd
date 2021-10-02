@@ -11,9 +11,9 @@ namespace Data.Commands
     {
         public override PayloadType PayloadType => PayloadType.Binary;
         public Guid AttachmentId { get; set; }
+        public string OriginalFileName { get; set; }
         public byte[] Value { get; set; }
         public int PartNumber { get; set; }
         public int TotalParts { get; set; }
-        public string ContentType { get; set; }
     }
 }

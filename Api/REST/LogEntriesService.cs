@@ -42,11 +42,8 @@ namespace api.REST
 
         [FunctionName("LogEntryAttachment")]
         public static async Task<IActionResult> RunLogEntryAttachment(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "log-entries/{missionId:guid}/{logEntryId:guid}/{attachmentId:guid}")] HttpRequest req,
-            Guid missionId,
-            Guid logEntryId,
-            Guid attachmentId,
-            [Blob("/attachments/{missionId}/{logEntryId}/{attachmentId}", FileAccess.Read, Connection = "%AttachmentBlobStorage%")] BlobClient attachment,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "log-entries/{missionId:guid}/{logEntryId:guid}/attachments/{attachmentId:guid}")] HttpRequest req,
+            [Blob("attachments/{missionId}/{logEntryId}/{attachmentId}", FileAccess.Read, Connection = "AttachmentBlobStorage")] BlobClient attachment,
             ILogger log)
         {
             try

@@ -14,27 +14,21 @@
         <div>
             @foreach (var attachment in Value.Attachments)
             {
-                <div>
-                    @if (attachment.UploadComplete)
-                    {
-                        var imgPath = logEntryClient.GetLogEntryAttachmentUri(mission.Id, Value.Id, attachment.Id);
-
-                        <img src=@imgPath />
-                    }
-                    else
-                    {
-                        <FluentProgressRing />
-                    }
-                </div>
+                <LogEntryAttachmentView 
+                    Attachment=attachment 
+                    LogEntryId=Value.Id 
+                    TotalParts=attachment.TotalParts 
+                    PartsUploaded=attachment.PartsUploaded 
+                    UploadComplete=attachment.UploadComplete />
             }
         </div>
     }
     @if (CanEdit)
     {
-        <div style="display:flex;flex-directon:row;align-content:center">
+        <div style="display:flex;flex-direction: row;align-content:center">
             @if (Editing)
             {
-                <FluentButton style="margin: 2px" @onclick="Update">Update</FluentButton>
+                <FluentButton style="margin: 2px;" @onclick="Update">Update</FluentButton>
             }
             <FluentButton style="margin: 2px" @onclick="ToggleEdit">
                 @if (Editing)
@@ -79,7 +73,6 @@
 
     [Parameter]
     public bool CanEdit { get; set; } = false;
-
     public bool Editing { get; set; } = false;
     public bool ShowHistory { get; set; } = false;
 

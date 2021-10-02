@@ -13,35 +13,34 @@ namespace LunarAPIClient.CommandProcessors
 {
     internal class UploadAttachmentPartCommandProcessor : LogEntryProducingCommandProcessor, ICommandProcessor
     {
-        private readonly ILogEntryRepository logEntryRepository;
-        private readonly ILogEntryAttachmentRepository logEntryAttachmentRepository;
+        private readonly ILogEntryRepository _logEntryRepository;
+        private readonly ILogEntryAttachmentRepository _logEntryAttachmentRepository;
+        private readonly ILogEntryAttachmentContentTypeRepository _logEntryAttachmentContentTypeRepository;
 
-        public UploadAttachmentPartCommandProcessor(ILogEntryAttachmentRepository logEntryAttachmentRepository, ILogEntryRepository logEntryRepository)
+        public UploadAttachmentPartCommandProcessor(
+            ILogEntryAttachmentRepository logEntryAttachmentRepository,
+            ILogEntryRepository logEntryRepository, 
+            ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository)
         {
-            this.logEntryAttachmentRepository = logEntryAttachmentRepository;
-            this.logEntryRepository = logEntryRepository;
+            this._logEntryAttachmentRepository = logEntryAttachmentRepository;
+            this._logEntryRepository = logEntryRepository;
+            this._logEntryAttachmentContentTypeRepository = logEntryAttachmentContentTypeRepository;
         }
 
         private async Task ProcessCommand(UploadAttachmentPartCommand cmd, CancellationToken cancellationToken)
         {
             if (cmd.Payload is BinaryPayloadValue binaryPayloadValue)
             {
-                var logEntryTask = logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
-                var numUploadedTask = logEntryAttachmentRepository.UploadAttachmentPart(
+                var logEntryTask = _logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
+                var numUploadedTask = _logEntryAttachmentRepository.UploadAttachmentPart(
                     cmd.MissionId, 
                     cmd.LogEntryId, 
-                    binaryPayloadValue, 
+                    binaryPayloadValue,
+                    _logEntryAttachmentContentTypeRepository.GetFileContentType(binaryPayloadValue.OriginalFileName),
                     cancellationToken);
 
                 var logEntry = await logEntryTask;
                 var numUploaded = await numUploadedTask;
-
-                //var attachment = logEntry.Attachments.Where(a => a.Id == binaryPayloadValue.AttachmentId).SingleOrDefault();
-
-                //if (attachment == null)
-                //    throw new Exception("can't find attachment");
-
-                //attachment.PartsUploaded = numUploaded;
 
                 logEntry.Attachments = logEntry.Attachments.Select(a =>
                 {
