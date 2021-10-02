@@ -2,6 +2,9 @@
 using Data.Converters;
 using Data.Log;
 using Data.Notifications;
+using LunarAPIClient.LogEntryRepository;
+using LunarAPIClient.NotificationClient;
+using Microsoft.AspNetCore.StaticFiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,15 +16,46 @@ namespace LunarAPIClient.CommandProcessors
 {
     internal class AppendLogEntryCommandProcessor : LogEntryProducingCommandProcessor
     {
-        public Task ProcessCommand(AppendLogEntryCommand cmd, CancellationToken cancellationToken)
+        private readonly ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository;
+        private readonly ILogEntryRepository logEntryRepository;
+
+        public AppendLogEntryCommandProcessor(
+            ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository, 
+            ILogEntryRepository logEntryRepository)
+        {
+            this.logEntryAttachmentContentTypeRepository = logEntryAttachmentContentTypeRepository;
+            this.logEntryRepository = logEntryRepository;
+        }
+
+        public async Task ProcessCommand(AppendLogEntryCommand cmd, CancellationToken cancellationToken)
         {
             LogEntry entry;
+
+            if (cmd.LogEntryId == default)
+            {
+                throw new Exception("invalid log entry id");
+            }
+
+            LogEntry existingEntry;
+            try
+            {
+                existingEntry = await logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // TODO: Doesn't already exist. This is expected in most cases... but we need to catch more specific exceptions
+                existingEntry = new PlaceholderLogEntry();
+            }
+
+            if (existingEntry.EntryType != LogEntryType.Placeholder)
+            {
+                throw new Exception("only placeholders should exist here");
+            }
 
             if (cmd.Payload is PlaintextPayloadValue plaintextPayloadValue)
             {
                 entry = new PlaintextLogEntry
                 {
-                    EntryType = LogEntryType.Plaintext,
                     Value = plaintextPayloadValue.Value
                 };
             }
@@ -30,9 +64,25 @@ namespace LunarAPIClient.CommandProcessors
                 throw new Exception("Unknown log entry type");
             }
 
-            entry.Id = Guid.NewGuid();
+            var fileNameProvider = new FileExtensionContentTypeProvider();
+            
+            entry.Id = cmd.LogEntryId;
             entry.MissionId = cmd.MissionId;
             entry.User = cmd.User;
+            entry.Attachments = cmd.Attachments.Select(a =>
+            {
+                var existingAttachment = existingEntry?.Attachments?.FirstOrDefault(ea => ea.Id == a.Id);
+                if (existingAttachment != null)
+                {
+                    existingAttachment.Alt = a.Alt;
+                    return existingAttachment;
+                }
+
+                a.ContentType = logEntryAttachmentContentTypeRepository.GetFileContentType(a.Name);
+
+                return a;
+            }).ToList();
+
             entry.LoggedAt = DateTime.UtcNow;
             entry.UpdatedAt = DateTime.UtcNow;
             entry.EditHistory = Enumerable.Empty<LogEntry>().ToList();
@@ -40,12 +90,12 @@ namespace LunarAPIClient.CommandProcessors
             ProduceLogEntry(entry);
             ProduceNotification(new Notification
             {
-                CommandTarget = SignalRCommands.NewLogEntry,
+                CommandTarget = NotificationCommands.NewLogEntry,
                 Audience = Audience.Everyone,
                 Message = entry
             });
 
-            return Task.CompletedTask;
+            return;
         }
 
         public override Task ProcessCommand(Command cmd, CancellationToken cancellationToken) => 

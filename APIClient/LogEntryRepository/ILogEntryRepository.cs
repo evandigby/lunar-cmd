@@ -11,6 +11,8 @@ namespace LunarAPIClient.LogEntryRepository
     public interface ILogEntryRepository
     {
         public Task<LogEntry> GetById(Guid id, Guid missionId, CancellationToken cancellationToken);
+        public Task<LogEntry> CreatePlaceholderById(Guid missionId, Guid id, IEnumerable<LogEntryAttachment> attachments, CancellationToken cancellationToken);
+
         public Task CreateOrUpdate(IEnumerable<LogEntry> entry, CancellationToken cancellationToken);
     }
 }

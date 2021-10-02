@@ -16,7 +16,7 @@ namespace Data.Log
     {
         public Guid Id { get; set; }
         public Guid MissionId { get; set; }
-        public LogEntryType EntryType { get; set; }
+        public abstract LogEntryType EntryType { get; }
         public User User { get; set; }
         public DateTime LoggedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -25,6 +25,8 @@ namespace Data.Log
 
         [JsonIgnore]
         public bool IsEdited => EditHistory?.Count > 0;
+
+        public List<LogEntryAttachment> Attachments { get; set; }
 
         public static LogEntry Deserialize(string payload)
         {

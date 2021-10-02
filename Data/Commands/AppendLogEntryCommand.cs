@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Data.Log;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,9 @@ namespace Data.Commands
         public AppendLogEntryCommand() {
             Name = nameof(AppendLogEntryCommand);
         }
+
+        public Guid LogEntryId { get; set; }
+        public List<LogEntryAttachment> Attachments { get; set; }
 
         public override CommandType CommandType => CommandType.AppendLogItem;
     }

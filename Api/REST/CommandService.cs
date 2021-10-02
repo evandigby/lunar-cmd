@@ -12,6 +12,7 @@ using System.Threading;
 using Data.Users;
 using api.Auth;
 using Data.Converters;
+using System.Text;
 
 namespace api.REST
 {
@@ -52,7 +53,16 @@ namespace api.REST
 
             try
             {
-                await commands.AddAsync(command.Serialize(), cancellationSource.Token);
+                var serialized = command.Serialize();
+                // Ignore too big for now. Later handle better
+                if (Encoding.UTF8.GetByteCount(serialized) < 1024 * 256)
+                {
+                    await commands.AddAsync(serialized, cancellationSource.Token);
+                }
+                else
+                {
+                    log.LogError($"Got too-large message: {Encoding.UTF8.GetByteCount(serialized)}");
+                }
             }
             catch (Exception ex)
             {

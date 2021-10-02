@@ -17,6 +17,7 @@ namespace Data.Converters
             return type switch
             {
                 LogEntryType.Plaintext => JsonSerializer.Deserialize<PlaintextLogEntry>(document.RootElement.GetRawText(), options),
+                LogEntryType.Placeholder => JsonSerializer.Deserialize<PlaceholderLogEntry>(document.RootElement.GetRawText(), options),
                 _ => throw new JsonException(),
             };
         }
