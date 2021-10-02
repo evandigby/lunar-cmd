@@ -1,4 +1,6 @@
-﻿@inject ICommandClient commandClient
+﻿@inject ILogEntryClient logEntryClient
+@inject Mission mission
+@inject ICommandClient commandClient
 
 <div style="display:flex;flex-direction:column">
     <div style="flex-wrap:wrap;flex-grow:1">
@@ -7,6 +9,26 @@
             <PlaintextLogEntryView @ref="updateableLogEntryView" Value=plaintextLogEntry Editing=@Editing />
         }
     </div>
+    @if (Value.Attachments?.Count() > 0)
+    {
+        <div>
+            @foreach (var attachment in Value.Attachments)
+            {
+                <div>
+                    @if (attachment.UploadComplete)
+                    {
+                        var imgPath = logEntryClient.GetLogEntryAttachmentUri(mission.Id, Value.Id, attachment.Id);
+
+                        <img src=@imgPath />
+                    }
+                    else
+                    {
+                        <FluentProgressRing />
+                    }
+                </div>
+            }
+        </div>
+    }
     @if (CanEdit)
     {
         <div style="display:flex;flex-directon:row;align-content:center">

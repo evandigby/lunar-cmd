@@ -3,6 +3,7 @@ using Client.State.LogState;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LunarAPIClient.NotificationClient;
 
 namespace Client.State
 {
@@ -23,6 +24,27 @@ namespace Client.State
         {
             _logEntries = _logEntries.Where(e => e.Id != entry.Id).Concat(new[] { entry }).ToList();
             UpdateLogs();
+        }
+
+        public void UpdateLogEntryProgress(LogEntryAttachmentPartUploadProgress progress)
+        {
+            _logEntries = _logEntries.Select(entry =>
+            {
+                if (entry.Id != progress.LogEntryId)
+                    return entry;
+
+                entry.Attachments = entry.Attachments.Select(attachment =>
+                {
+                    if (attachment.Id != progress.AttachmentId)
+                        return attachment;
+
+                    attachment.PartsUploaded = progress.NumUploaded;
+
+                    return attachment;
+                }).ToList();
+
+                return entry;
+            }).ToList();
         }
 
         public void AddLogEntries(IEnumerable<LogEntry> entries)

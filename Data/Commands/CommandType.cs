@@ -3,6 +3,7 @@
     public enum CommandType
     {
         AppendLogItem,
-        UpdateLogItem
+        UpdateLogItem,
+        UploadAttachmentPart,
     }
 }

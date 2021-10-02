@@ -1,4 +1,6 @@
-﻿@attribute [Authorize]
+﻿@using LunarAPIClient.NotificationClient
+@using System.IO
+@attribute [Authorize]
 
 @inject StateContainer state
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -24,8 +26,13 @@
         <EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter>
             <div style="display: flex; flex-direction: row;">
                 <InputText style="flex-grow:1;margin:2px" @bind-Value=@CurrentMission.CurrentEntryText />
+                <InputFile @ref="inputFile" OnChange=LoadFiles multiple></InputFile>
                 <FluentButton style="flex-shrink: 0;margin:2px" type="submit">Send</FluentButton>
             </div>
+            @if (!string.IsNullOrWhiteSpace(SelectedFilesMessage))
+            {
+                <div>@SelectedFilesMessage</div>
+            }
         </EditForm>
     </div>
 </div>
@@ -33,6 +40,10 @@
 @code {
     [Parameter, EditorRequired]
     public Guid MissionID { get; set; } = Guid.Empty;
+    private InputFile? inputFile { get; set; }
+    private string SelectedFilesMessage { get; set; } = string.Empty;
+
+    IReadOnlyList<IBrowserFile>? selectedFiles;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -46,31 +57,35 @@
 
             StateHasChanged();
 
-            hubConnection = await hubConnectionFactory.ConnectHub<LogEntry>(
-                new HubCommand<LogEntry>[]
+            hubConnection = await hubConnectionFactory.ConnectHub(
+                hub =>
+                {
+                    hub.On<LogEntry>(NotificationCommands.NewLogEntry, logEntry =>
                     {
-                        new HubCommand<LogEntry>
-                        {
-                            CommandName = SignalRCommands.NewLogEntry,
-                            OnReceive = (logEntry) =>
-                            {
-                                CurrentMission.AddLogEntry(logEntry);
-                                StateHasChanged();
-                            }
-                        },
-                        new HubCommand<LogEntry>
-                        {
-                            CommandName = SignalRCommands.UpdateLogEntry,
-                            OnReceive = (logEntry) =>
-                            {
-                                CurrentMission.UpdateLogEntry(logEntry);
-                                StateHasChanged();
-                            }
-                        }
+                        CurrentMission.AddLogEntry(logEntry);
+                        StateHasChanged();
                     });
+
+                    hub.On<LogEntry>(NotificationCommands.UpdateLogEntry, logEntry =>
+                    {
+                        CurrentMission.UpdateLogEntry(logEntry);
+                        StateHasChanged();
+                    });
+
+                    hub.On<LogEntryAttachmentPartUploadProgress>(NotificationCommands.UpdateLogEntryAttachment, uploadProgress =>
+                    {
+                        CurrentMission.UpdateLogEntryProgress(uploadProgress);
+                        StateHasChanged();
+                    });
+                });
         }
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private void LoadFiles(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
     }
 
     private async Task LoadLogEntries()
@@ -101,10 +116,32 @@
         }
     }
 
+    private const long blockSize = 1024 * 128; // 128k -- max event hub message size is 256k
+    private const long maxFileSize = 1024 * 1024 * 50; // 50mb
     private async Task Enter(EditContext editContext)
     {
-        var cmd = new AppendLogEntryCommand
+        var attachments = selectedFiles?.Select(f => 
             {
+                var totalBlocks = (int)Math.Ceiling((decimal)f.Size / (decimal)blockSize);
+                return new
+                {
+                    file = f,
+                    attachment = new LogEntryAttachment
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = f.Name,
+                        ContentType = "application/octet-stream",
+                        Alt = "Alternate Text",
+                        PartsUploaded = 0,
+                        TotalParts = totalBlocks
+                    },
+                };
+            }).ToList();
+
+        var entryCmd = new AppendLogEntryCommand
+            {
+                LogEntryId = Guid.NewGuid(),
+                Attachments = (attachments?.Select(a => a.attachment) ?? Enumerable.Empty<LogEntryAttachment>()).ToList(),
                 Payload = new PlaintextPayloadValue
                 {
                     Value = CurrentMission.CurrentEntryText
@@ -115,11 +152,47 @@
 
         try
         {
-            await commandClient.SendCommand(cmd, src.Token);
+            await commandClient.SendCommand(entryCmd, src.Token);
         }
         catch (AccessTokenNotAvailableException exception)
         {
             exception.Redirect();
+        }
+
+        if (attachments != null)
+        {
+            foreach (var attachment in attachments)
+            {
+                using Stream input = attachment.file.OpenReadStream(maxFileSize, src.Token);
+
+                var currentBlock = 1;
+
+                byte[] buffer = new byte[blockSize];
+                int bytesRead;
+                while ((bytesRead = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    var fileCmd = new UploadAttachmentPartCommand
+                        {
+                            LogEntryId = entryCmd.LogEntryId,
+                            Payload = new BinaryPayloadValue
+                            {
+                                AttachmentId = attachment.attachment.Id,
+                                Value = buffer,
+                                PartNumber = currentBlock++,
+                                TotalParts = attachment.attachment.TotalParts,
+                                ContentType = attachment.attachment.ContentType
+                            }
+                        };
+                    try
+                    {
+                        await commandClient.SendCommand(fileCmd, src.Token);
+                    }
+                    catch (AccessTokenNotAvailableException exception)
+                    {
+                        exception.Redirect();
+                    }
+                }
+            }
         }
 
         CurrentMission.CurrentEntryText = "";

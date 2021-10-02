@@ -18,5 +18,10 @@ namespace LunarAPIClient
 
             return logEntries ?? Enumerable.Empty<LogEntry>();
         }
+
+        public string GetLogEntryAttachmentUri(Guid missionId, Guid logEntryId, Guid attachmentId)
+        {
+            return $"{ApiEndpoint}/{missionId}/{logEntryId}/{attachmentId}";
+        }
     }
 }

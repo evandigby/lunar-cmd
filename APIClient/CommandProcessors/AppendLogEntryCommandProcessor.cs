@@ -2,6 +2,7 @@
 using Data.Converters;
 using Data.Log;
 using Data.Notifications;
+using LunarAPIClient.NotificationClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,11 @@ namespace LunarAPIClient.CommandProcessors
         {
             LogEntry entry;
 
+            if (cmd.LogEntryId == default)
+            {
+                throw new Exception("invalid log entry id");
+            }
+
             if (cmd.Payload is PlaintextPayloadValue plaintextPayloadValue)
             {
                 entry = new PlaintextLogEntry
@@ -30,9 +36,10 @@ namespace LunarAPIClient.CommandProcessors
                 throw new Exception("Unknown log entry type");
             }
 
-            entry.Id = Guid.NewGuid();
+            entry.Id = cmd.LogEntryId;
             entry.MissionId = cmd.MissionId;
             entry.User = cmd.User;
+            entry.Attachments = cmd.Attachments;
             entry.LoggedAt = DateTime.UtcNow;
             entry.UpdatedAt = DateTime.UtcNow;
             entry.EditHistory = Enumerable.Empty<LogEntry>().ToList();
@@ -40,7 +47,7 @@ namespace LunarAPIClient.CommandProcessors
             ProduceLogEntry(entry);
             ProduceNotification(new Notification
             {
-                CommandTarget = SignalRCommands.NewLogEntry,
+                CommandTarget = NotificationCommands.NewLogEntry,
                 Audience = Audience.Everyone,
                 Message = entry
             });

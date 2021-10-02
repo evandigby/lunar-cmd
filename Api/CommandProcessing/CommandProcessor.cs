@@ -12,11 +12,13 @@ using Microsoft.Extensions.Logging;
 using LunarAPIClient.CommandProcessors;
 using api.LogEntryRepository;
 using api.NotificationClient;
+using Azure.Storage.Blobs.Specialized;
 
 namespace api.CommandProcessing
 {
     public static class CommandProcessor
     {
+        // TODO: Split into multiple command types?
         [FunctionName("CommandProcessor")]
         public static async Task Run(
             [CosmosDBTrigger(
@@ -32,13 +34,19 @@ namespace api.CommandProcessing
             [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBLogEntriesCollectionName%", ConnectionStringSetting = "CosmosDB")] DocumentClient logEntryDocumentClient,
             ILogger log)
         {
-            var tokenSource = new CancellationTokenSource();
-            var exceptions = new List<Exception>();
+            var attachmentConnectionString = Environment.GetEnvironmentVariable("AttachmentBlobStorage");
+            var attachmentBlobContainer = Environment.GetEnvironmentVariable("AttachmentBlobContainer");
 
+            var logEntryAttachmentRepository = new AzureBlobStorageLogEntryAttachmentRepository(attachmentConnectionString, attachmentBlobContainer);
             var logEntryRepository = new CosmosDBLogEntryRepository(logEntries, logEntryDocumentClient);
             var signalRNotificationClient = new SignalRNotificationClient(messages);
 
-            var commandProcessor = new LunarAPIClient.CommandProcessors.CommandProcessor(logEntryRepository, signalRNotificationClient);
+            var tokenSource = new CancellationTokenSource();
+            var exceptions = new List<Exception>();
+            var commandProcessor = new LunarAPIClient.CommandProcessors.CommandProcessor(
+                logEntryRepository, 
+                signalRNotificationClient,
+                logEntryAttachmentRepository);
 
             foreach (var doc in input)
             {
