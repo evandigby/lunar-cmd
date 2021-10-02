@@ -14,13 +14,21 @@ namespace LunarAPIClient.CommandProcessors
 {
     public class CommandProcessor
     {
-        readonly ILogEntryRepository _logEntryRepository;
-        readonly INotificationClient _notificationClient;
+        private readonly ILogEntryRepository _logEntryRepository;
+        private readonly INotificationClient _notificationClient;
+        private readonly ILogEntryAttachmentRepository _logEntryAttachmentRepository;
+        private readonly ILogEntryAttachmentContentTypeRepository _logEntryAttachmentContentTypeRepository;
 
-        public CommandProcessor(ILogEntryRepository logEntryRepository, INotificationClient notificationClient)
+        public CommandProcessor(
+            ILogEntryRepository logEntryRepository,
+            INotificationClient notificationClient,
+            ILogEntryAttachmentRepository logEntryAttachmentRepository, 
+            ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository)
         {
             _logEntryRepository = logEntryRepository;
             _notificationClient = notificationClient;
+            _logEntryAttachmentRepository = logEntryAttachmentRepository;
+            _logEntryAttachmentContentTypeRepository = logEntryAttachmentContentTypeRepository;
         }
 
         public async Task ProcessCommand(Command cmd, CancellationToken cancellationToken)
@@ -28,11 +36,18 @@ namespace LunarAPIClient.CommandProcessors
             ICommandProcessor processor;
             if (cmd is AppendLogEntryCommand)
             {
-                processor = new AppendLogEntryCommandProcessor();
+                processor = new AppendLogEntryCommandProcessor(_logEntryAttachmentContentTypeRepository, _logEntryRepository);
             }
             else if (cmd is UpdateLogEntryCommand)
             {
                 processor = new UpdateLogEntryCommandProcessor(_logEntryRepository);
+            }
+            else if (cmd is UploadAttachmentPartCommand)
+            {
+                processor = new UploadAttachmentPartCommandProcessor(
+                    _logEntryAttachmentRepository, 
+                    _logEntryRepository, 
+                    _logEntryAttachmentContentTypeRepository);
             }
             else
             {

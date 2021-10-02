@@ -18,7 +18,7 @@ namespace Client.RealTimeCommunication
             this.apiState = apiState;
         }
 
-        public async Task<HubConnection> ConnectHub<T>(IEnumerable<HubCommand<T>> hubCommands)
+        public async Task<HubConnection> ConnectHub(Action<HubConnection> hubConfigFunc)
         {
             var hubConnection = new HubConnectionBuilder()
                 .WithUrl($"{apiState.BaseAddress}api/{apiState.ApiVersion}/")
@@ -31,16 +31,7 @@ namespace Client.RealTimeCommunication
             if (hubConnection == null)
                 throw new Exception("could not create hub connection");
 
-            foreach (var command in hubCommands)
-            {
-                if (command.CommandName == null)
-                    throw new Exception("command must have name");
-
-                if (command.OnReceive == null)
-                    throw new Exception("command must have onreceive");
-
-                hubConnection.On<T>(command.CommandName, (item) => command.OnReceive(item));
-            }
+            hubConfigFunc(hubConnection);
 
             await hubConnection.StartAsync();
 

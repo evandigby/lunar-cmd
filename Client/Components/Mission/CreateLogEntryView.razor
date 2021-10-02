@@ -1,0 +1,133 @@
+﻿@using System.IO
+
+@inject ICommandClient commandClient
+
+<EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter >
+    <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; flex-direction: row;flex-grow:1;">
+            <InputText style="flex-grow:1;margin:2px" @bind-Value=@CurrentMission.CurrentEntryText />
+            <FluentButton style="flex-shrink: 0;margin:2px" type="submit" Disabled=inputDisabled>Send</FluentButton>
+        </div>
+
+        @if (!clearInputFile)
+        {
+            <InputFile OnChange=LoadFiles multiple></InputFile>
+        }
+        @if (!string.IsNullOrWhiteSpace(SelectedFilesMessage))
+        {
+            <div style="flex-shrink:1">@SelectedFilesMessage</div>
+        }
+    </div>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired]
+    public Mission CurrentMission { get; set; } = new Mission();
+
+    private string SelectedFilesMessage { get; set; } = string.Empty;
+    private bool inputDisabled { get; set; } = false;
+    private bool clearInputFile { get; set; } = false;
+
+    IReadOnlyList<IBrowserFile>? selectedFiles;
+
+    private void LoadFiles(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+    }
+
+    private void ClearInputFile()
+    {
+        clearInputFile = true;
+        StateHasChanged();
+        clearInputFile = false;
+        StateHasChanged();
+    }
+
+    private const long blockSize = 1024 * 128; // 128k -- max event hub message size is 256k
+    private const long maxFileSize = 1024 * 1024 * 50; // 50mb
+    private async Task Enter(EditContext editContext)
+    {
+        inputDisabled = true;
+        StateHasChanged();
+        var attachments = selectedFiles?.Select(f =>
+            {
+                var totalBlocks = (int)Math.Ceiling((decimal)f.Size / (decimal)blockSize);
+                return new
+                {
+                    file = f,
+                    attachment = new LogEntryAttachment
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = f.Name,
+                            Alt = "Alternate Text",
+                            PartsUploaded = 0,
+                            TotalParts = totalBlocks
+                        },
+                };
+            }).ToList();
+
+        var entryCmd = new AppendLogEntryCommand
+            {
+                LogEntryId = Guid.NewGuid(),
+                Attachments = (attachments?.Select(a => a.attachment) ?? Enumerable.Empty<LogEntryAttachment>()).ToList(),
+                Payload = new PlaintextPayloadValue
+                {
+                    Value = CurrentMission.CurrentEntryText
+                }
+            };
+
+        var src = new CancellationTokenSource();
+
+        try
+        {
+            await commandClient.SendCommand(entryCmd, src.Token);
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+
+        if (attachments != null)
+        {
+            foreach (var attachment in attachments)
+            {
+                using Stream input = attachment.file.OpenReadStream(maxFileSize, src.Token);
+
+                var currentBlock = 1;
+
+                byte[] buffer = new byte[blockSize];
+                int bytesRead;
+                while ((bytesRead = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    var fileCmd = new UploadAttachmentPartCommand
+                        {
+                            LogEntryId = entryCmd.LogEntryId,
+                            Payload = new BinaryPayloadValue
+                            {
+                                AttachmentId = attachment.attachment.Id,
+                                Value = buffer,
+                                PartNumber = currentBlock++,
+                                TotalParts = attachment.attachment.TotalParts,
+                                OriginalFileName = attachment.attachment.Name
+                            }
+                        };
+                    try
+                    {
+                        await commandClient.SendCommand(fileCmd, src.Token);
+                    }
+                    catch (AccessTokenNotAvailableException exception)
+                    {
+                        exception.Redirect();
+                    }
+                }
+            }
+        }
+
+        CurrentMission.CurrentEntryText = "";
+
+        ClearInputFile();
+
+        inputDisabled = false;
+        StateHasChanged();
+    }
+}

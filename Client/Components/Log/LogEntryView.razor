@@ -1,4 +1,6 @@
-﻿@inject ICommandClient commandClient
+﻿@inject ILogEntryClient logEntryClient
+@inject Mission mission
+@inject ICommandClient commandClient
 
 <div style="display:flex;flex-direction:column">
     <div style="flex-wrap:wrap;flex-grow:1">
@@ -6,13 +8,32 @@
         {
             <PlaintextLogEntryView @ref="updateableLogEntryView" Value=plaintextLogEntry Editing=@Editing />
         }
+        else if (Value is PlaceholderLogEntry placeholderLogEntry)
+        {
+            <PlaceholderLogEntryView Value=placeholderLogEntry />
+        }
     </div>
+    @if (Value.Attachments?.Count() > 0)
+    {
+        <div style="display:flex;flex-direction:row;">
+            @foreach (var attachment in Value.Attachments)
+            {
+                var attachmentVal = attachment;
+                <LogEntryAttachmentView 
+                    Attachment=attachmentVal 
+                    LogEntryId=Value.Id 
+                    TotalParts=attachmentVal.TotalParts 
+                    PartsUploaded=attachmentVal.PartsUploaded 
+                    UploadComplete=attachmentVal.UploadComplete />
+            }
+        </div>
+    }
     @if (CanEdit)
     {
-        <div style="display:flex;flex-directon:row;align-content:center">
+        <div style="display:flex;flex-direction: row;align-content:center">
             @if (Editing)
             {
-                <FluentButton style="margin: 2px" @onclick="Update">Update</FluentButton>
+                <FluentButton style="margin: 2px;" @onclick="Update">Update</FluentButton>
             }
             <FluentButton style="margin: 2px" @onclick="ToggleEdit">
                 @if (Editing)
@@ -57,7 +78,6 @@
 
     [Parameter]
     public bool CanEdit { get; set; } = false;
-
     public bool Editing { get; set; } = false;
     public bool ShowHistory { get; set; } = false;
 
