@@ -3,6 +3,7 @@ using Data.Converters;
 using Data.Log;
 using Data.Notifications;
 using LunarAPIClient.LogEntryRepository;
+using LunarAPIClient.NotificationClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +41,6 @@ namespace LunarAPIClient.CommandProcessors
             {
                 newEntry = new PlaintextLogEntry
                 {
-                    EntryType = LogEntryType.Plaintext,
                     Value = plaintextPayloadValue.Value,
                 };
             }
@@ -63,7 +63,7 @@ namespace LunarAPIClient.CommandProcessors
             ProduceNotification(new Notification
             {
                 Audience = Audience.Everyone,
-                CommandTarget = SignalRCommands.UpdateLogEntry,
+                CommandTarget = NotificationCommands.UpdateLogEntry,
                 Message = newEntry
             });
         }

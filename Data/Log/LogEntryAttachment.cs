@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace Data.Log
+{
+
+    public class LogEntryAttachment
+    {
+        public Guid Id { get; set; }
+        public string Name {  get; set; }   
+        public string Alt { get; set; }
+        public int TotalParts { get; set; }
+        public int PartsUploaded { get; set; }
+        public string ContentType {  get; set; }
+
+        [JsonIgnore]
+        public bool UploadComplete => PartsUploaded == TotalParts;
+    }
+}

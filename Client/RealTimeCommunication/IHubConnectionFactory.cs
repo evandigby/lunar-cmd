@@ -8,6 +8,6 @@ namespace Client.RealTimeCommunication
 {
     public interface IHubConnectionFactory
     {
-        Task<HubConnection> ConnectHub<T>(IEnumerable<HubCommand<T>> hubCommands);
+        Task<HubConnection> ConnectHub(Action<HubConnection> hubConfigFunc);
     }
 }

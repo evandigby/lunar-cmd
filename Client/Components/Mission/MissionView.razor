@@ -1,4 +1,6 @@
-﻿@attribute [Authorize]
+﻿@using LunarAPIClient.NotificationClient
+@using System.IO
+@attribute [Authorize]
 
 @inject StateContainer state
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -22,15 +24,7 @@
         </FluentTabs>
     </div>
     <div style="width: 100%;overflow: hidden;flex-shrink: 0;padding:2px;">
-        <EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter>
-            <div style="display: flex; flex-direction: row;">
-                <InputText style="flex-grow:1;margin:2px" @bind-Value=@CurrentMission.CurrentEntryText />
-                <FluentButton style="flex-shrink: 0;margin:2px" type="submit">Send</FluentButton>
-                <FluentButton id="startRecognizeOnceAsyncButton" style="flex-shrink: 0;margin:2px" disabled="@recording" @onclick=Record>
-                    <i class="ms-Icon ms-Icon--Microphone"></i>
-                </FluentButton>
-            </div>
-        </EditForm>
+        <CreateLogEntryView CurrentMission=CurrentMission />
     </div>
 </div>
 
@@ -56,28 +50,27 @@
 
             StateHasChanged();
 
-            hubConnection = await hubConnectionFactory.ConnectHub<LogEntry>(
-                new HubCommand<LogEntry>[]
-                                                {
-                        new HubCommand<LogEntry>
-                        {
-                            CommandName = SignalRCommands.NewLogEntry,
-                            OnReceive = (logEntry) =>
-                            {
-                                CurrentMission.AddLogEntry(logEntry);
-                                StateHasChanged();
-                            }
-                        },
-                        new HubCommand<LogEntry>
-                        {
-                            CommandName = SignalRCommands.UpdateLogEntry,
-                            OnReceive = (logEntry) =>
-                            {
-                                CurrentMission.UpdateLogEntry(logEntry);
-                                StateHasChanged();
-                            }
-                        }
-                                            });
+            hubConnection = await hubConnectionFactory.ConnectHub(
+                hub =>
+                {
+                    hub.On<LogEntry>(NotificationCommands.NewLogEntry, logEntry =>
+                    {
+                        CurrentMission.AddLogEntry(logEntry);
+                        StateHasChanged();
+                    });
+
+                    hub.On<LogEntry>(NotificationCommands.UpdateLogEntry, logEntry =>
+                    {
+                        CurrentMission.UpdateLogEntry(logEntry);
+                        StateHasChanged();
+                    });
+
+                    hub.On<LogEntryAttachmentPartUploadProgress>(NotificationCommands.UpdateLogEntryAttachment, uploadProgress =>
+                    {
+                        CurrentMission.UpdateLogEntryProgress(uploadProgress);
+                        StateHasChanged();
+                    });
+                });
         }
 
         if (missionViewObjRef == null)
@@ -138,32 +131,6 @@
         {
             await hubConnection.DisposeAsync();
         }
-    }
-
-    private async Task Enter(EditContext editContext)
-    {
-        var cmd = new AppendLogEntryCommand
-            {
-                Payload = new PlaintextPayloadValue
-                {
-                    Value = CurrentMission.CurrentEntryText
-                }
-            };
-
-        var src = new CancellationTokenSource();
-
-        try
-        {
-            await commandClient.SendCommand(cmd, src.Token);
-        }
-        catch (AccessTokenNotAvailableException exception)
-        {
-            exception.Redirect();
-        }
-
-        CurrentMission.CurrentEntryText = "";
-
-        StateHasChanged();
     }
 
     [JSInvokable]
