@@ -1,3 +1,20 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div style="position:absolute;width:99.9vw;height:99.5vh;overflow:hidden;display:flex;flex-direction:row;">
+    <div style="margin:5px;padding:5px;border: 1px solid black;border-radius:5px;display:flex;flex-direction:column;flex-grow=0">
+        <h3>One Giant Leap - Lunar C&C</h3>
+        <FluentAnchor style="width:100%;margin:2px;" Appearance=Appearance.Filled href=@CurrentMissionPath>Current Mission</FluentAnchor>
+        <FluentAnchor style="width:100%;margin:2px;" Appearance=Appearance.Filled href="/mission-settings">Mission Settings</FluentAnchor>
+        <FluentAnchor style="width:100%;margin:2px;" Appearance=Appearance.Filled href="/user-settings">User Settings</FluentAnchor>
+        <FluentAnchor style="width:100%;margin:2px;" Appearance=Appearance.Filled href="/about">About</FluentAnchor>
+    </div>
+    <div style="margin:5px;padding:5px;border:1px solid black;border-radius:5px;flex-grow:1">
+        @Body
+    </div>
+</div>
+
+@code {
+    public Guid CurrentMissionID { get; set; } = Guid.Empty;
+
+    private string CurrentMissionPath => $"/mission/{CurrentMissionID}";
+}
