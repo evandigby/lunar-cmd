@@ -1,12 +1,16 @@
 ﻿@using System.IO
 
 @inject ICommandClient commandClient
+@inject IJSRuntime jsRuntime
 
-<EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter >
+<EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter>
     <div style="display: flex; flex-direction: column;">
         <div style="display: flex; flex-direction: row;flex-grow:1;">
             <InputText style="flex-grow:1;margin:2px" @bind-Value=@CurrentMission.CurrentEntryText />
             <FluentButton style="flex-shrink: 0;margin:2px" type="submit" Disabled=inputDisabled>Send</FluentButton>
+            <FluentButton id="startRecognizeOnceAsyncButton" style="flex-shrink: 0;margin:2px" disabled="@recording" @onclick=Record>
+                <i class="ms-Icon ms-Icon--Microphone"></i>
+            </FluentButton>
         </div>
 
         @if (!clearInputFile)
@@ -27,6 +31,11 @@
     private string SelectedFilesMessage { get; set; } = string.Empty;
     private bool inputDisabled { get; set; } = false;
     private bool clearInputFile { get; set; } = false;
+
+    private bool recording { get; set; } = false;
+    private bool notRecording { get; set; } = true;
+
+    private DotNetObjectReference<CreateLogEntryView> missionViewObjRef { get; set; } = null;
 
     IReadOnlyList<IBrowserFile>? selectedFiles;
 
@@ -130,4 +139,44 @@
         inputDisabled = false;
         StateHasChanged();
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (missionViewObjRef == null)
+        {
+            missionViewObjRef = DotNetObjectReference.Create(this);
+            await jsRuntime.InvokeVoidAsync("MyJSMethods.initializeObjectReference", missionViewObjRef);
+        }
+
+        base.OnAfterRender(firstRender);
+    }
+
+    [JSInvokable]
+    public async Task SpeechToText(string text)
+    {
+        CurrentMission.CurrentEntryText = text;
+
+        await Enter(editContext: null);
+    }
+
+    private async Task Record()
+    {
+        recording = true;
+        notRecording = false;
+
+        await jsRuntime.InvokeVoidAsync("MyJSMethods.startRecordingOnce");
+    }
+
+    [JSInvokable]
+    public async Task RecordingStopped()
+    {
+        recording = false;
+        notRecording = true;
+    }
+
+    [JSInvokable]
+    public string GetSubscriptionKey() => "18d86c7414234aae8cfae7a8ad04c82e";
+
+    [JSInvokable]
+    public string GetRegion() => "australiaeast";
 }

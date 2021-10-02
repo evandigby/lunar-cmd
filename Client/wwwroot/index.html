@@ -29,12 +29,12 @@
 
     <script>
 
-        let missionViewDotNetReference;
+        let logEntryViewDotNetReference;
 
         window.MyJSMethods = {
 
             initializeObjectReference: function (element) {
-                missionViewDotNetReference = element;
+                logEntryViewDotNetReference = element;
             },
 
             startRecordingOnce: function () {
@@ -54,8 +54,8 @@
 
         function recordOnce() {
             startRecognizeOnceAsyncButton = document.getElementById("startRecognizeOnceAsyncButton");
-            subscriptionKey = missionViewDotNetReference.invokeMethod('GetSubscriptionKey'); 
-            serviceRegion = missionViewDotNetReference.invokeMethod('GetRegion'); 
+            subscriptionKey = logEntryViewDotNetReference.invokeMethod('GetSubscriptionKey'); 
+            serviceRegion = logEntryViewDotNetReference.invokeMethod('GetRegion'); 
 
             startRecognizeOnceAsyncButton.disabled = true;
 
@@ -68,12 +68,12 @@
             recognizer.recognizeOnceAsync(
                 function (result) {
                     startRecognizeOnceAsyncButton.disabled = false;
-                    missionViewDotNetReference.invokeMethodAsync('RecordingStopped');
+                    logEntryViewDotNetReference.invokeMethodAsync('RecordingStopped');
                     window.console.log(result);
 
                     recognizer.close();
                     recognizer = undefined;
-                    missionViewDotNetReference.invokeMethodAsync('SpeechToText', result.text);
+                    logEntryViewDotNetReference.invokeMethodAsync('SpeechToText', result.text);
                 },
                 function (err) {
                     startRecognizeOnceAsyncButton.disabled = false;
@@ -81,7 +81,7 @@
 
                     recognizer.close();
                     recognizer = undefined;
-                    missionViewDotNetReference.invokeMethodAsync('SpeechToText', err);
+                    logEntryViewDotNetReference.invokeMethodAsync('SpeechToText', err);
                 });
 
             if (!!window.SpeechSDK) {

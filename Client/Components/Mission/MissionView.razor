@@ -9,7 +9,6 @@
 @inject IHubConnectionFactory hubConnectionFactory
 @inject ICommandClient commandClient
 @inject Mission CurrentMission
-@inject IJSRuntime jsRuntime
 
 @implements IAsyncDisposable
 
@@ -29,15 +28,9 @@
 </div>
 
 @code {
-    string recordButton = "record";
-
-    bool recording = false;
-    bool notRecording = true;
-
     [Parameter, EditorRequired]
     public Guid MissionID { get; set; } = Guid.Empty;
-    private DotNetObjectReference<MissionView> missionViewObjRef;
-
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -73,37 +66,8 @@
                 });
         }
 
-        if (missionViewObjRef == null)
-        {
-            missionViewObjRef = DotNetObjectReference.Create(this);
-            await jsRuntime.InvokeVoidAsync("MyJSMethods.initializeObjectReference", missionViewObjRef);
-        }
-
         await base.OnAfterRenderAsync(firstRender);
     }
-
-    private async Task Record()
-    {
-        recordButton = "recording";
-        recording = true;
-        notRecording = false;
-
-        await jsRuntime.InvokeVoidAsync("MyJSMethods.startRecordingOnce");
-    }
-
-    [JSInvokable]
-    public async Task RecordingStopped()
-    {
-        recordButton = "record";
-        recording = false;
-        notRecording = true;
-    }
-
-    [JSInvokable]
-    public string GetSubscriptionKey() => "18d86c7414234aae8cfae7a8ad04c82e";
-
-    [JSInvokable]
-    public string GetRegion() => "australiaeast";
 
     private async Task LoadLogEntries()
     {
@@ -131,13 +95,5 @@
         {
             await hubConnection.DisposeAsync();
         }
-    }
-
-    [JSInvokable]
-    public async Task SpeechToText(string text)
-    {
-        CurrentMission.CurrentEntryText = text;
-
-        await Enter(editContext: null);
     }
 }
