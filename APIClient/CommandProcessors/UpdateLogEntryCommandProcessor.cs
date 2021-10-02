@@ -41,7 +41,6 @@ namespace LunarAPIClient.CommandProcessors
             {
                 newEntry = new PlaintextLogEntry
                 {
-                    EntryType = LogEntryType.Plaintext,
                     Value = plaintextPayloadValue.Value,
                 };
             }

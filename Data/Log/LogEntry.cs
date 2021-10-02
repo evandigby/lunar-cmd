@@ -16,7 +16,7 @@ namespace Data.Log
     {
         public Guid Id { get; set; }
         public Guid MissionId { get; set; }
-        public LogEntryType EntryType { get; set; }
+        public abstract LogEntryType EntryType { get; }
         public User User { get; set; }
         public DateTime LoggedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

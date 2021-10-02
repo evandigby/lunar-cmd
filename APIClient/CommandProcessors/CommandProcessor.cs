@@ -36,7 +36,7 @@ namespace LunarAPIClient.CommandProcessors
             ICommandProcessor processor;
             if (cmd is AppendLogEntryCommand)
             {
-                processor = new AppendLogEntryCommandProcessor(_logEntryAttachmentContentTypeRepository);
+                processor = new AppendLogEntryCommandProcessor(_logEntryAttachmentContentTypeRepository, _logEntryRepository);
             }
             else if (cmd is UpdateLogEntryCommand)
             {

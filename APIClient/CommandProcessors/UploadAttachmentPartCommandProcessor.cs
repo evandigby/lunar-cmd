@@ -31,7 +31,30 @@ namespace LunarAPIClient.CommandProcessors
         {
             if (cmd.Payload is BinaryPayloadValue binaryPayloadValue)
             {
-                var logEntryTask = _logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
+                Task<LogEntry> logEntryTask;
+                try
+                {
+                    logEntryTask = _logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
+                }
+                catch (Exception)
+                {
+                    // TODO: Handle specific types of exceptions
+                    logEntryTask = _logEntryRepository.CreatePlaceholderById(
+                        cmd.MissionId, 
+                        cmd.LogEntryId, 
+                        new LogEntryAttachment[]
+                        {
+                            new LogEntryAttachment
+                            {
+                                Id = binaryPayloadValue.AttachmentId,
+                                TotalParts = binaryPayloadValue.TotalParts,
+                                ContentType = _logEntryAttachmentContentTypeRepository.GetFileContentType(binaryPayloadValue.OriginalFileName),
+                                PartsUploaded = 0,
+                                Name = binaryPayloadValue.OriginalFileName,
+                            }
+                        },
+                        cancellationToken);
+                }
                 var numUploadedTask = _logEntryAttachmentRepository.UploadAttachmentPart(
                     cmd.MissionId, 
                     cmd.LogEntryId, 

@@ -17,13 +17,17 @@ namespace LunarAPIClient.CommandProcessors
     internal class AppendLogEntryCommandProcessor : LogEntryProducingCommandProcessor
     {
         private readonly ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository;
+        private readonly ILogEntryRepository logEntryRepository;
 
-        public AppendLogEntryCommandProcessor(ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository)
+        public AppendLogEntryCommandProcessor(
+            ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository, 
+            ILogEntryRepository logEntryRepository)
         {
             this.logEntryAttachmentContentTypeRepository = logEntryAttachmentContentTypeRepository;
+            this.logEntryRepository = logEntryRepository;
         }
 
-        public Task ProcessCommand(AppendLogEntryCommand cmd, CancellationToken cancellationToken)
+        public async Task ProcessCommand(AppendLogEntryCommand cmd, CancellationToken cancellationToken)
         {
             LogEntry entry;
 
@@ -32,11 +36,26 @@ namespace LunarAPIClient.CommandProcessors
                 throw new Exception("invalid log entry id");
             }
 
+            LogEntry existingEntry = null;
+            try
+            {
+                existingEntry = await logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
+            }
+            catch (Exception)
+            {
+                // TODO: Doesn't already exist. This is expected... but we need to catch more specific exceptions
+                existingEntry = new PlaceholderLogEntry();
+            }
+
+            if (existingEntry.EntryType != LogEntryType.Placeholder)
+            {
+                throw new Exception("only placeholders should exist here");
+            }
+
             if (cmd.Payload is PlaintextPayloadValue plaintextPayloadValue)
             {
                 entry = new PlaintextLogEntry
                 {
-                    EntryType = LogEntryType.Plaintext,
                     Value = plaintextPayloadValue.Value
                 };
             }
@@ -46,14 +65,21 @@ namespace LunarAPIClient.CommandProcessors
             }
 
             var fileNameProvider = new FileExtensionContentTypeProvider();
-
             
             entry.Id = cmd.LogEntryId;
             entry.MissionId = cmd.MissionId;
             entry.User = cmd.User;
             entry.Attachments = cmd.Attachments.Select(a =>
             {
+                var existingAttachment = existingEntry?.Attachments?.FirstOrDefault(ea => ea.Id == a.Id);
+                if (existingAttachment != null)
+                {
+                    existingAttachment.Alt = a.Alt;
+                    return existingAttachment;
+                }
+
                 a.ContentType = logEntryAttachmentContentTypeRepository.GetFileContentType(a.Name);
+
                 return a;
             }).ToList();
 
@@ -69,7 +95,7 @@ namespace LunarAPIClient.CommandProcessors
                 Message = entry
             });
 
-            return Task.CompletedTask;
+            return;
         }
 
         public override Task ProcessCommand(Command cmd, CancellationToken cancellationToken) => 

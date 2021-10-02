@@ -2,13 +2,17 @@
 
 @inject ICommandClient commandClient
 
-<EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter>
+<EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter >
     <div style="display: flex; flex-direction: column;">
         <div style="display: flex; flex-direction: row;flex-grow:1;">
             <InputText style="flex-grow:1;margin:2px" @bind-Value=@CurrentMission.CurrentEntryText />
-            <FluentButton style="flex-shrink: 0;margin:2px" type="submit">Send</FluentButton>
+            <FluentButton style="flex-shrink: 0;margin:2px" type="submit" Disabled=inputDisabled>Send</FluentButton>
         </div>
-        <InputFile @ref="inputFile" OnChange=LoadFiles multiple></InputFile>
+
+        @if (!clearInputFile)
+        {
+            <InputFile OnChange=LoadFiles multiple></InputFile>
+        }
         @if (!string.IsNullOrWhiteSpace(SelectedFilesMessage))
         {
             <div style="flex-shrink:1">@SelectedFilesMessage</div>
@@ -20,8 +24,9 @@
     [Parameter, EditorRequired]
     public Mission CurrentMission { get; set; } = new Mission();
 
-    private InputFile? inputFile { get; set; }
     private string SelectedFilesMessage { get; set; } = string.Empty;
+    private bool inputDisabled { get; set; } = false;
+    private bool clearInputFile { get; set; } = false;
 
     IReadOnlyList<IBrowserFile>? selectedFiles;
 
@@ -30,10 +35,20 @@
         selectedFiles = e.GetMultipleFiles();
     }
 
+    private void ClearInputFile()
+    {
+        clearInputFile = true;
+        StateHasChanged();
+        clearInputFile = false;
+        StateHasChanged();
+    }
+
     private const long blockSize = 1024 * 128; // 128k -- max event hub message size is 256k
     private const long maxFileSize = 1024 * 1024 * 50; // 50mb
     private async Task Enter(EditContext editContext)
     {
+        inputDisabled = true;
+        StateHasChanged();
         var attachments = selectedFiles?.Select(f =>
             {
                 var totalBlocks = (int)Math.Ceiling((decimal)f.Size / (decimal)blockSize);
@@ -110,6 +125,9 @@
 
         CurrentMission.CurrentEntryText = "";
 
+        ClearInputFile();
+
+        inputDisabled = false;
         StateHasChanged();
     }
 }
