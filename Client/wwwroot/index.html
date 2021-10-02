@@ -10,9 +10,12 @@
     <link href="css/app.css" rel="stylesheet" />
     <script src="_content/Microsoft.Authentication.WebAssembly.Msal/AuthenticationService.js"></script>
     <script type="module" src="https://unpkg.com/@fluentui/web-components"></script>
+
+    <link rel="stylesheet"
+          href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 </head>
 
-<body>
+<body class="ms-Fabric">
     <div id="app">Loading...</div>
 
     <div id="blazor-error-ui">
@@ -20,7 +23,74 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+
+    <script>
+
+        let missionViewDotNetReference;
+
+        window.MyJSMethods = {
+
+            initializeObjectReference: function (element) {
+                missionViewDotNetReference = element;
+            },
+
+            startRecordingOnce: function () {
+                recordOnce();
+            }
+
+        };
+
+        // status fields and start button in UI
+        var phraseDiv;
+        var startRecognizeOnceAsyncButton;
+
+        // subscription key and region for speech services.
+        var subscriptionKey, serviceRegion;
+        var SpeechSDK;
+        var recognizer;
+
+        function recordOnce() {
+            startRecognizeOnceAsyncButton = document.getElementById("startRecognizeOnceAsyncButton");
+            subscriptionKey = missionViewDotNetReference.invokeMethod('GetSubscriptionKey'); 
+            serviceRegion = missionViewDotNetReference.invokeMethod('GetRegion'); 
+
+            startRecognizeOnceAsyncButton.disabled = true;
+
+            var speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+
+            speechConfig.speechRecognitionLanguage = "en-US";
+            var audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+            recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+            recognizer.recognizeOnceAsync(
+                function (result) {
+                    startRecognizeOnceAsyncButton.disabled = false;
+                    missionViewDotNetReference.invokeMethodAsync('RecordingStopped');
+                    window.console.log(result);
+
+                    recognizer.close();
+                    recognizer = undefined;
+                    missionViewDotNetReference.invokeMethodAsync('SpeechToText', result.text);
+                },
+                function (err) {
+                    startRecognizeOnceAsyncButton.disabled = false;
+                    window.console.log(err);
+
+                    recognizer.close();
+                    recognizer = undefined;
+                    missionViewDotNetReference.invokeMethodAsync('SpeechToText', err);
+                });
+
+            if (!!window.SpeechSDK) {
+                SpeechSDK = window.SpeechSDK;
+                startRecognizeOnceAsyncButton.disabled = false;
+            }
+        }
+    </script>
+
 </body>
 
 </html>
