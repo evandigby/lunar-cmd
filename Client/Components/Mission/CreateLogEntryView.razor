@@ -16,18 +16,20 @@
                 <i class="ms-Icon ms-Icon--Microphone"></i>
             </FluentButton>
             <FluentButton id="stopRecordingButton" style="flex-shrink: 0;margin:2px" disabled="@notRecording" hidden="@notRecording" @onclick=StopRecording>
-                <i class="ms-Icon ms-Icon--CircleStop"></i>
+                <i class="ms-Icon ms-Icon--CircleStopSolid"></i>
             </FluentButton>
-        </div>
-
-        @if (!clearInputFile)
-        {
-            <InputFile OnChange=LoadFiles multiple></InputFile>
-        }
-        @if (!string.IsNullOrWhiteSpace(SelectedFilesMessage))
-        {
-            <div style="flex-shrink:1">@SelectedFilesMessage</div>
-        }
+            @if (!clearInputFile)
+            {
+                <FluentButton class="custom-file-upload" style="flex-shrink: 0;margin:2px" @onclick=TriggerFileUpload>
+                    <i class="ms-Icon ms-Icon--Attach"></i>
+                </FluentButton>
+                <InputFile id="file-upload" OnChange=LoadFiles multiple style="display:none"></InputFile>
+            }
+            @if (!string.IsNullOrWhiteSpace(SelectedFilesMessage))
+            {
+                <div style="flex-shrink:1">@SelectedFilesMessage</div>
+            }
+        </div>        
     </div>
 </EditForm>
 
@@ -45,6 +47,11 @@
     private DotNetObjectReference<CreateLogEntryView> missionViewObjRef { get; set; } = null;
 
     IReadOnlyList<IBrowserFile>? selectedFiles;
+
+    private void TriggerFileUpload()
+    {
+        jsRuntime.InvokeVoidAsync("MyJSMethods.triggerFileUpload", "file-upload");
+    }
 
     private void LoadFiles(InputFileChangeEventArgs e)
     {
@@ -157,7 +164,6 @@
     public async Task ResetControl()
     {
         CurrentMission.CurrentEntryText = "";
-        ClearInputFile();
     }
 
     private async Task Record()
