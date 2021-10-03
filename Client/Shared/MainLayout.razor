@@ -1,82 +1,60 @@
 ﻿@inherits LayoutComponentBase
 @inject ICommandClient commandClient
 
-<MainContainer>
-    <HeaderRegion>
-        <Header>
-            <BrandingRegion>
-                <Branding>
-                    <CustomIcon>
-                        <Icon Shape="moon" Solid="true" />
-                    </CustomIcon>
-                    <ChildContent>ONE GIANT LEAP - LUNAR C&C</ChildContent>
-                </Branding>
-            </BrandingRegion>
-            <Actions>
-                <NavItem Icon="user" href="/authentication/login">
-                </NavItem>
-            </Actions>
-        </Header>
-    </HeaderRegion>
-    <SideNavigationRegion>
-        <VerticalNav HasIcons="true">
-            <NavItem Icon="users">
-                <a href=@CurrentMissionPath>Current Mission</a>
-            </NavItem>
-            <NavItem Icon="file-settings">
-                <ChildContent>
-                    <a href="/mission-settings">Mission Settings</a>
-                </ChildContent>
-            </NavItem>
-            <NavItem Icon="user">
-                <ChildContent>
-                    <a href="/user-settings">User Settings</a>
-                </ChildContent>
-            </NavItem>
-            <NavItem Icon="info-standard">
-                <ChildContent>
-                    <a href="/about">About</a>
-                </ChildContent>
-            </NavItem>
-            <NavItem Icon="info-standard" OnClick="FinalizeLogs">
-                <ChildContent>
-                    Finalize My Current Logs
-                </ChildContent>
-            </NavItem>
-        </VerticalNav>
-    </SideNavigationRegion>
-    <ContentArea>
+<AuthorizeView>
+    <Authorized>
+        <MainContainer>
+            <HeaderRegion>
+                <Header>
+                    <BrandingRegion>
+                        <Branding>
+                            <CustomIcon>
+                                <Icon Shape="moon" Solid="true" />
+                            </CustomIcon>
+                            <ChildContent>ONE GIANT LEAP - LUNAR C&C</ChildContent>
+                        </Branding>
+                    </BrandingRegion>
+                    <Actions>
+                        <NavItem Icon="user" href="/authentication/login">
+                        </NavItem>
+                    </Actions>
+                </Header>
+            </HeaderRegion>
+            <SideNavigationRegion>
+                <VerticalNav HasIcons="true">
+                    <NavItem Icon="users">
+                        <a href=@CurrentMissionPath>Current Mission</a>
+                    </NavItem>
+                    <NavItem Icon="file-settings">
+                        <ChildContent>
+                            <a href="/mission-settings">Mission Settings</a>
+                        </ChildContent>
+                    </NavItem>
+                    <NavItem Icon="user">
+                        <ChildContent>
+                            <a href="/user-settings">User Settings</a>
+                        </ChildContent>
+                    </NavItem>
+                    <NavItem Icon="info-standard">
+                        <ChildContent>
+                            <a href="/about">About</a>
+                        </ChildContent>
+                    </NavItem>
+                </VerticalNav>
+            </SideNavigationRegion>
+            <ContentArea>
+                @Body
+            </ContentArea>
+        </MainContainer>
+    </Authorized>
+    <NotAuthorized>
         @Body
-    </ContentArea>
-</MainContainer>
+    </NotAuthorized>
+</AuthorizeView>
 
 <style>
-    .anchor {
-        display: block;
-        width: 100%;
-        height: 50px;
-        border-radius: 5px;
-        outline: none;
-        border: none;
-        background-image: linear-gradient(to right, #32be8f, #38d39f, #32be8f);
-        font-size: 1.2rem;
-        color: #fff;
-        font-family: 'Poppins', sans-serif;
-        text-transform: uppercase;
-        margin: 1rem 0;
-        cursor: pointer;
-        transition: .5s;
-        text-align: center;
-    }
-    .anchor:hover {
-        background-image: linear-gradient(to right, #9ecea5, #9edea0, #9ecea5);
-    }
-
-    h2 {
-        color: orangered !important;
-        font-family: 'Poppins', sans-serif !important;
-        text-transform: uppercase !important;
-        font-weight: bold !important;
+    a {
+        text-decoration: none;
     }
 </style>
 
