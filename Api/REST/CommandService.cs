@@ -118,17 +118,17 @@ namespace api.REST
                 return new UnauthorizedObjectResult(ex);
             }
 
-            var attachmentConnectionString = Environment.GetEnvironmentVariable("AttachmentBlobStorage");
-            var attachmentBlobContainer = Environment.GetEnvironmentVariable("AttachmentBlobContainer");
+            var attachmentConnectionString = Environment.GetEnvironmentVariable("AttachmentBlobStorage", EnvironmentVariableTarget.Process);
+            var attachmentBlobContainer = Environment.GetEnvironmentVariable("AttachmentBlobContainer", EnvironmentVariableTarget.Process);
 
             if (string.IsNullOrEmpty(attachmentConnectionString))
             {
-                throw new Exception("NO CONNECTION STRING");
+                return new BadRequestObjectResult("NO CONNECTION STRING");
             }
 
             if (string.IsNullOrEmpty(attachmentBlobContainer))
             {
-                throw new Exception("NO BLOB CONTAINER");
+                return new BadRequestObjectResult("NO BLOB CONTAINER");
             }
             var logEntryAttachmentRepository = new AzureBlobStorageLogEntryAttachmentRepository(attachmentConnectionString, attachmentBlobContainer);
             var signalRNotificationClient = new SignalRNotificationClient(messages);
