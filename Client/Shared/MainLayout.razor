@@ -1,5 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@inject ICommandClient commandClient
 
 <AuthorizeView>
     <Authorized>
@@ -9,7 +8,7 @@
                     <BrandingRegion>
                         <Branding>
                             <CustomIcon>
-                                <Icon Shape="moon" Solid="true" />
+                                <img src="img/oneGiantLeap.svg" alt="Logo" style="padding:4px;height:5vh;">
                             </CustomIcon>
                             <ChildContent>ONE GIANT LEAP - LUNAR C&C</ChildContent>
                         </Branding>
@@ -64,10 +63,4 @@
 
     private string CurrentMissionPath => $"/mission/{CurrentMissionID}";
 
-    public async Task FinalizeLogs(MouseEventArgs args)
-    {
-        var src = new CancellationTokenSource();
-
-        await commandClient.SendCommands(new[] { new FinalizeUserLogEntriesCommand() }, src.Token);
-    }
 }

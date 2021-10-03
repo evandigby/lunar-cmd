@@ -16,13 +16,22 @@
 
 <div style="width:100%;height:100%;display: flex;flex-direction: column;">
     <div style="overflow: auto;flex-grow:1">
-        <FluentTabs>
+        <Tabs Layout="TabLayout.Horizontal">
             @foreach (var log in CurrentMission.Logs)
             {
-                <FluentTab style="color: orangered !important">@log.Name</FluentTab>
-                <FluentTabPanel><LogView CurrentLog=@log /></FluentTabPanel>
+                <Tab>
+                    <Header>@log.Name</Header>
+                    <ChildContent><LogView CurrentLog=@log /></ChildContent>
+                </Tab>
             }
-        </FluentTabs>
+            <Tab>
+                <Header>Finalize My Log Entries</Header>
+                <ChildContent>
+                    <p>Finalizing your log entries is <b>IRREVERSABLE</b></p>
+                    <Button OnClick="FinalizeLogs">Finalize My Current Logs <Icon Shape="user" Inverse="true" Solid="true" Badge="IconBadge.Danger" /></Button>
+                </ChildContent>
+            </Tab>
+        </Tabs>
     </div>
     <div style="width: 100%;overflow: hidden;flex-shrink: 0;padding:2px;">
         <CreateLogEntryView CurrentMission=CurrentMission />
@@ -78,6 +87,13 @@
         }
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+    
+    public async Task FinalizeLogs(MouseEventArgs args)
+    {
+        var src = new CancellationTokenSource();
+
+        await commandClient.SendCommands(new[] { new FinalizeUserLogEntriesCommand() }, src.Token);
     }
 
     private async Task WaitOnTasks(IEnumerable<Task> tasks)

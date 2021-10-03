@@ -4,45 +4,26 @@ body {
     margin: auto;
     padding: 0;
     width: 100%;
+    background-color: rgba(255, 255, 255, 0.46);
+    background-image: url('../img/background.jpg');
 }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    overflow: hidden;
-    display: table;
-    background-image: url('../img/background.jpg')
-}
-
-
-
-.img {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    border-radius: 5px 5px 0 0;
-    height: 100px;
-}
 
 .login-content {
     transition: 0.3s;
-    border-radius: 14px;
     vertical-align: middle;
-    background-color: rgba(255, 255, 255, 0.46);
-    height: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    width: auto;
+    overflow: hidden;
 }
 
 
 .container {
-    padding: 50px 16px;
+    margin: 20px;
     text-align: center;
+    vertical-align: middle;
 }
 
-.btn {
-    display: block;
-    width: 100%;
+.btnlogin {
+    width: 75vw;
     height: 50px;
     border-radius: 25px;
     outline: none;
@@ -56,11 +37,12 @@ body {
     margin: 1rem 0;
     cursor: pointer;
     transition: .5s;
+    
 }
 
-    .btn:hover {
-        background-position: right;
-    }
+.btnlogin:hover {
+    background-position: right;
+}
 a {
     text-decoration: none;
 }
