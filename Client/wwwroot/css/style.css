@@ -64,3 +64,13 @@ body {
 a {
     text-decoration: none;
 }
+
+.home-content {
+    transition: 0.3s;
+    border-radius: 14px;
+    vertical-align: middle;
+    height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    width: auto;
+}
