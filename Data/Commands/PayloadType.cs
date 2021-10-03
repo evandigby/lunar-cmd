@@ -9,6 +9,6 @@ namespace Data.Commands
     {
         Plaintext = 0,
         BinaryReference = 1,
-        None = 2
+        Empty = 2
     }
 }

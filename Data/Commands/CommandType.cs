@@ -8,5 +8,6 @@
         AppendLogItem = 0,
         UpdateLogItem = 1,
         UploadAttachment = 2,
+        FinalizeUserLogEntries = 3,
     }
 }

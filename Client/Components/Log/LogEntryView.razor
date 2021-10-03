@@ -23,7 +23,7 @@
             }
         </div>
     }
-    @if (Value.User.Id.Equals(state.User.Id))
+    @if (CanEdit)
     {
         <div style="display:flex;flex-direction: row;align-content:center">
             @if (Editing)
@@ -74,6 +74,7 @@
     [Parameter]
     public bool Editing { get; set; } = false;
     public bool ShowHistory { get; set; } = false;
+    public bool CanEdit => Value.User.Id.Equals(state.User.Id) && !Value.IsFinalized;
 
     IEditableLogEntryView? updateableLogEntryView = null;
 

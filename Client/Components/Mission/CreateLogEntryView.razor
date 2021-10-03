@@ -42,7 +42,7 @@
     private bool recording { get; set; } = false;
     private bool notRecording { get; set; } = true;
 
-    private DotNetObjectReference<CreateLogEntryView> missionViewObjRef { get; set; } = null;
+    private DotNetObjectReference<CreateLogEntryView>? missionViewObjRef { get; set; } = null;
 
     IReadOnlyList<IBrowserFile>? selectedFiles;
 
@@ -82,7 +82,7 @@
             {
                 LogEntryId = Guid.NewGuid(),
                 Attachments = (attachments?.Select(a => a.attachment) ?? Enumerable.Empty<LogEntryAttachment>()).ToList(),
-                Payload = new PlaintextPayloadValue
+                Payload = new PlaintextPayload
                 {
                     Value = CurrentMission.CurrentEntryText
                 }
@@ -154,10 +154,11 @@
     }
 
     [JSInvokable]
-    public async Task ResetControl()
+    public Task ResetControl()
     {
         CurrentMission.CurrentEntryText = "";
         ClearInputFile();
+        return Task.CompletedTask;
     }
 
     private async Task Record()
@@ -176,17 +177,19 @@
         await jsRuntime.InvokeVoidAsync("MyJSMethods.startRecording");
     }
 
-    private async Task StopRecording()
+    private Task StopRecording()
     {
         recording = false;
         notRecording = true;
+        return Task.CompletedTask;
     }
 
     [JSInvokable]
-    public async Task RecordingStopped()
+    public Task RecordingStopped()
     {
         recording = false;
         notRecording = true;
+        return Task.CompletedTask;
     }
 
     [JSInvokable]

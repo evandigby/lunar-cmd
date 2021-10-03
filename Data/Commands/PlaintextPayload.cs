@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Data.Commands
 {
-    public class PlaintextPayloadValue : CommandPayload
+    public class PlaintextPayload : CommandPayload
     {
         public override PayloadType PayloadType => PayloadType.Plaintext;
 

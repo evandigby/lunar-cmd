@@ -80,7 +80,7 @@ namespace api.REST
                 {
                     LogEntryId = Guid.NewGuid(),
                     Attachments = (attachments?.Select(a => a.attachment) ?? Enumerable.Empty<LogEntryAttachment>()).ToList(),
-                    Payload = new PlaintextPayloadValue
+                    Payload = new PlaintextPayload
                     {
                         Value = textFromSpeech
                     },

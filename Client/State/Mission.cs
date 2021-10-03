@@ -31,9 +31,9 @@ namespace Client.State
             UpdateLogs();
         }
 
-        public void AddLogEntries(IEnumerable<LogEntry> entries)
+        public void SetLogEntries(IEnumerable<LogEntry> entries)
         {
-            _logEntries.AddRange(entries.Where(IsLogEntryValid));
+            _logEntries = entries.Where(IsLogEntryValid).ToList();
             UpdateLogs();
         }
 

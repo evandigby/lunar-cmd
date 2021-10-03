@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject ICommandClient commandClient
 
 <MainContainer>
     <HeaderRegion>
@@ -35,6 +36,11 @@
             <NavItem Icon="info-standard">
                 <ChildContent>
                     <a href="/about">About</a>
+                </ChildContent>
+            </NavItem>
+            <NavItem Icon="info-standard" OnClick="FinalizeLogs">
+                <ChildContent>
+                    Finalize My Current Logs
                 </ChildContent>
             </NavItem>
         </VerticalNav>
@@ -79,4 +85,11 @@
     public Guid CurrentMissionID { get; set; } = Guid.Empty;
 
     private string CurrentMissionPath => $"/mission/{CurrentMissionID}";
+
+    public async Task FinalizeLogs(MouseEventArgs args)
+    {
+        var src = new CancellationTokenSource();
+
+        await commandClient.SendCommands(new[] { new FinalizeUserLogEntriesCommand() }, src.Token);
+    }
 }

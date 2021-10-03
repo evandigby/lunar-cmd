@@ -57,7 +57,7 @@ namespace LunarAPIClient.CommandProcessors
                         CreatedAt = DateTime.UtcNow,
                         MissionId = missionId,
                         LogEntryId = logEntryId,
-                        Payload = new BinaryPayloadReference
+                        Payload = new BinaryReferencePayload
                         {
                             AttachmentId = attachmentId,
                             OriginalFileName = file.FileName,

@@ -20,7 +20,7 @@ namespace Data.Log
         public User User { get; set; }
         public DateTime LoggedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-
+        public bool IsFinalized { get; set; }
         public List<LogEntry> EditHistory { get; set; }
 
         [JsonIgnore]

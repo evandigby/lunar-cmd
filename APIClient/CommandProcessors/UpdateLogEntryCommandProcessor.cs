@@ -26,6 +26,11 @@ namespace LunarAPIClient.CommandProcessors
         {
             var existingEntry = await logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
 
+            if (existingEntry.IsFinalized)
+            {
+                throw new Exception("cannot edit a finalized log entry");
+            }
+
             if (existingEntry.MissionId != cmd.MissionId)
             {
                 throw new Exception("cannot transfer log entry to another mission");
@@ -37,7 +42,7 @@ namespace LunarAPIClient.CommandProcessors
             }
 
             LogEntry newEntry;
-            if (cmd.Payload is PlaintextPayloadValue plaintextPayloadValue)
+            if (cmd.Payload is PlaintextPayload plaintextPayloadValue)
             {
                 newEntry = new PlaintextLogEntry
                 {

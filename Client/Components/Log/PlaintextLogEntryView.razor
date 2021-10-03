@@ -31,7 +31,7 @@
     public UpdateLogEntryCommand UpdateCommand => new UpdateLogEntryCommand
         {
             LogEntryId = Value.Id,
-            Payload = new PlaintextPayloadValue
+            Payload = new PlaintextPayload
             {
                 Value = NewValue
             }

@@ -59,6 +59,12 @@
                         await Attachments.UpdateLogEntryProgress(uploadProgress, logEntryClient, src.Token);
                         StateHasChanged();
                     });
+
+                    hub.On<UserLogEntriesUpdated>(NotificationCommands.RefreshAllLogEntries, async userLogEntriesUpdated =>
+                    {
+                        var src = new CancellationTokenSource();
+                        await UpdateLogEntries(src.Token);
+                    });
                 });
 
             StateHasChanged();
@@ -84,32 +90,36 @@
             StateHasChanged();
         }
     }
+
+    private async Task UpdateLogEntries(CancellationToken cancellationToken)
+    {
+        var entries = (await logEntryClient.GetLogEntriesByMissionId(MissionID, cancellationToken)).OrderByDescending(e => e.LoggedAt);
+        CurrentMission.SetLogEntries(entries);
+        StateHasChanged();
+        foreach (var entry in entries)
+        {
+            if (entry.Attachments?.Any() != true)
+                continue;
+
+            foreach (var attachment in entry.Attachments)
+            {
+                if (Attachments.Get(attachment.Id) != null)
+                    continue;
+
+                await Attachments.AddAttachment(logEntryClient, MissionID, entry.Id, attachment.Id, cancellationToken);
+
+                StateHasChanged();
+            }
+        }
+    }
+
     private async Task LoadLogEntries()
     {
         var src = new CancellationTokenSource();
 
         try
         {
-            var entries = (await logEntryClient.GetLogEntriesByMissionId(MissionID, src.Token)).OrderByDescending(e => e.LoggedAt);
-
-            CurrentMission.AddLogEntries(entries);
-            StateHasChanged();
-
-            foreach (var entry in entries)
-            {
-                if (entry.Attachments?.Any() != true)
-                    continue;
-
-                foreach (var attachment in entry.Attachments)
-                {
-                    if (Attachments.Get(attachment.Id) != null)
-                        continue;
-
-                    await Attachments.AddAttachment(logEntryClient, MissionID, entry.Id, attachment.Id, src.Token);
-
-                    StateHasChanged();
-                }
-            }
+            await UpdateLogEntries(src.Token);
         }
         catch (AccessTokenNotAvailableException exception)
         {
