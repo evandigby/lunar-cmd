@@ -1,5 +1,7 @@
 ﻿using Client.State;
 using Data.Converters;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -18,10 +20,18 @@ namespace Client.RealTimeCommunication
             this.apiState = apiState;
         }
 
-        public async Task<HubConnection> ConnectHub<T>(IEnumerable<HubCommand<T>> hubCommands)
+        public async Task<HubConnection> ConnectHub(IAccessTokenProvider accessTokenProvider, Action<HubConnection> hubConfigFunc)
         {
             var hubConnection = new HubConnectionBuilder()
-                .WithUrl($"{apiState.BaseAddress}api/{apiState.ApiVersion}/")
+                .WithUrl($"{apiState.BaseAddress}api/{apiState.ApiVersion}/", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        var token = await accessTokenProvider.RequestAccessToken();
+                        return token.TryGetToken(out AccessToken accessToken) ? accessToken.Value : null;
+                    };
+                })
+                .WithAutomaticReconnect()
                 .AddJsonProtocol(options =>
                 {
                     options.PayloadSerializerOptions = ConverterOptions.JsonSerializerOptions;
@@ -31,16 +41,7 @@ namespace Client.RealTimeCommunication
             if (hubConnection == null)
                 throw new Exception("could not create hub connection");
 
-            foreach (var command in hubCommands)
-            {
-                if (command.CommandName == null)
-                    throw new Exception("command must have name");
-
-                if (command.OnReceive == null)
-                    throw new Exception("command must have onreceive");
-
-                hubConnection.On<T>(command.CommandName, (item) => command.OnReceive(item));
-            }
+            hubConfigFunc(hubConnection);
 
             await hubConnection.StartAsync();
 

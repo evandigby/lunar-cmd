@@ -11,3 +11,5 @@ It is developed as a submission to the 2021 Space Apps Challenge: [Lunar Surface
 - [Evan Digby](https://github.com/evandigby)
 - [Tenzing Sherpa](https://github.com/tenzingsherpaa)
 - [Aditya Krishnan Mohan](https://github.com/adityakm24)
+- [Naveed Kharadi](https://github.com/naveedkharadi)
+- [Chris Cliff](https://github.com/cliff42)

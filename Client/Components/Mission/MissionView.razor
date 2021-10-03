@@ -1,5 +1,8 @@
-﻿@attribute [Authorize]
+﻿@using LunarAPIClient.NotificationClient
+@using System.IO
+@attribute [Authorize]
 
+@inject IAccessTokenProvider accessTokenProvider
 @inject StateContainer state
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IUserClient userClient
@@ -7,6 +10,7 @@
 @inject IHubConnectionFactory hubConnectionFactory
 @inject ICommandClient commandClient
 @inject Mission CurrentMission
+@inject Attachments Attachments
 
 @implements IAsyncDisposable
 
@@ -21,12 +25,7 @@
         </FluentTabs>
     </div>
     <div style="width: 100%;overflow: hidden;flex-shrink: 0;padding:2px;">
-        <EditForm style="width: 100%" Model=@CurrentMission OnValidSubmit=@Enter>
-            <div style="display: flex; flex-direction: row;">
-                <InputText style="flex-grow:1;margin:2px" @bind-Value=@CurrentMission.CurrentEntryText />
-                <FluentButton style="flex-shrink: 0;margin:2px" type="submit">Send</FluentButton>
-            </div>
-        </EditForm>
+        <CreateLogEntryView CurrentMission=CurrentMission />
     </div>
 </div>
 
@@ -38,6 +37,31 @@
     {
         if (firstRender)
         {
+            hubConnection = await hubConnectionFactory.ConnectHub(
+                accessTokenProvider,
+                hub =>
+                {
+                    hub.On<LogEntry>(NotificationCommands.NewLogEntry, logEntry =>
+                    {
+                        CurrentMission.AddLogEntry(logEntry);
+                        StateHasChanged();
+                    });
+
+                    hub.On<LogEntry>(NotificationCommands.UpdateLogEntry, logEntry =>
+                    {
+                        CurrentMission.UpdateLogEntry(logEntry);
+                        StateHasChanged();
+                    });
+
+                    hub.On<LogEntryAttachmentUploadComplete>(NotificationCommands.LogEntryAttachmentUploadComplete, async uploadProgress =>
+                    {
+                        var src = new CancellationTokenSource();
+                        await Attachments.UpdateLogEntryProgress(uploadProgress, logEntryClient, src.Token);
+                        StateHasChanged();
+                    });
+                });
+
+            StateHasChanged();
             var src = new CancellationTokenSource();
 
             state.UpdateUser(await userClient.Me(src.Token));
@@ -45,45 +69,44 @@
             await LoadLogEntries();
 
             StateHasChanged();
-
-            hubConnection = await hubConnectionFactory.ConnectHub<LogEntry>(
-                new HubCommand<LogEntry>[]
-                    {
-                        new HubCommand<LogEntry>
-                        {
-                            CommandName = SignalRCommands.NewLogEntry,
-                            OnReceive = (logEntry) =>
-                            {
-                                CurrentMission.AddLogEntry(logEntry);
-                                StateHasChanged();
-                            }
-                        },
-                        new HubCommand<LogEntry>
-                        {
-                            CommandName = SignalRCommands.UpdateLogEntry,
-                            OnReceive = (logEntry) =>
-                            {
-                                CurrentMission.UpdateLogEntry(logEntry);
-                                StateHasChanged();
-                            }
-                        }
-                    });
         }
 
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    private async Task WaitOnTasks(IEnumerable<Task> tasks)
+    {
+        var currentTasks = tasks.ToList();
+        while (currentTasks.Any())
+        {
+            Task finishedTask = await Task.WhenAny(tasks);
+            currentTasks.Remove(finishedTask);
+            StateHasChanged();
+        }
+    }
     private async Task LoadLogEntries()
     {
         var src = new CancellationTokenSource();
 
         try
         {
-            var entries = await logEntryClient.GetLogEntriesByMissionId(MissionID, src.Token);
+            var entries = (await logEntryClient.GetLogEntriesByMissionId(MissionID, src.Token)).OrderByDescending(e => e.LoggedAt);
 
-            CurrentMission.AddLogEntries(entries.OrderByDescending(e => e.LoggedAt));
-
+            CurrentMission.AddLogEntries(entries);
             StateHasChanged();
+
+            foreach (var entry in entries)
+            {
+                foreach (var attachment in entry.Attachments)
+                {
+                    if (Attachments.Get(attachment.Id) != null)
+                        continue;
+
+                    await Attachments.AddAttachment(logEntryClient, MissionID, entry.Id, attachment.Id, src.Token);
+
+                    StateHasChanged();
+                }
+            }
         }
         catch (AccessTokenNotAvailableException exception)
         {
@@ -99,31 +122,5 @@
         {
             await hubConnection.DisposeAsync();
         }
-    }
-
-    private async Task Enter(EditContext editContext)
-    {
-        var cmd = new AppendLogEntryCommand
-            {
-                Payload = new PlaintextPayloadValue
-                {
-                    Value = CurrentMission.CurrentEntryText
-                }
-            };
-
-        var src = new CancellationTokenSource();
-
-        try
-        {
-            await commandClient.SendCommand(cmd, src.Token);
-        }
-        catch (AccessTokenNotAvailableException exception)
-        {
-            exception.Redirect();
-        }
-
-        CurrentMission.CurrentEntryText = "";
-
-        StateHasChanged();
     }
 }

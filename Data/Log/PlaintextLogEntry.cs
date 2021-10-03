@@ -9,5 +9,7 @@ namespace Data.Log
     public class PlaintextLogEntry : LogEntry
     {
         public string Value { get; set; }
+
+        public override LogEntryType EntryType => LogEntryType.Plaintext;
     }
 }

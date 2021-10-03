@@ -1,0 +1,42 @@
+﻿@inject Mission mission
+@inject ILogEntryClient logEntryClient
+@inject Attachments Attachments
+
+<div style="flex-grow:0;flex-shrink:0;padding:2px;">
+    @if (attachmentData == null)
+    {
+        <FluentSkeleton style="width:100px;height:100px" />
+    }
+    else
+    {
+        @if (attachmentData.DataURI.StartsWith("data:image/"))
+        {
+            <img src=@attachmentData.DataURI style="max-width:5vw;max-height:5vh" @onclick=OnClick />
+
+            @if (ShowFullSize)
+            {
+                <FluentDialog style="text-align:center;vertical-align:middle" @onclick=OnClick>
+                    <img sytle="object-fit:contain;" src=@attachmentData.DataURI @onclick=OnClick />
+                </FluentDialog>
+            }
+        }
+        else
+        {
+            <div>Invalid attachment type</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public LogEntryAttachment Attachment { get; set; } = new LogEntryAttachment();
+
+    private LogEntryAttachmentData? attachmentData => Attachments.Get(Attachment.Id);
+
+    public bool ShowFullSize { get; set; }
+
+    private void OnClick(MouseEventArgs e)
+    {
+        ShowFullSize = !ShowFullSize;
+    }
+}

@@ -10,6 +10,11 @@
     </fluent-data-grid-row>
     @foreach (var entry in CurrentLog.LogEntries)
     {
+        if (entry?.User?.Id == null)
+        {
+            continue;
+        }
+
         var canEdit = state.User.Id == entry.User.Id;
 
         <fluent-data-grid-row>
@@ -18,10 +23,10 @@
                 @if (entry.IsEdited)
                 {
                     <FluentDivider />
-                    <i>Edited on @entry.UpdatedAt</i>
+                    <i>Edited on @entry?.UpdatedAt</i>
                 }
             </fluent-data-grid-cell>
-            <fluent-data-grid-cell grid-column="2">@entry.User.Name</fluent-data-grid-cell>
+            <fluent-data-grid-cell grid-column="2">@entry?.User?.Name</fluent-data-grid-cell>
             <fluent-data-grid-cell grid-column="3">
                 <LogEntryView Value=@entry CanEdit=canEdit />
             </fluent-data-grid-cell>

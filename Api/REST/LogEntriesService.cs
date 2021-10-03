@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.Documents;
 using api.Auth;
+using System.IO;
+using Azure.Storage.Blobs;
 
 namespace api.REST
 {
@@ -36,6 +38,32 @@ namespace api.REST
             }
 
             return new OkObjectResult(logEntries.Select(e => LogEntry.Deserialize(e.ToString())).ToArray());
+        }
+
+        [FunctionName("LogEntryAttachment")]
+        public static async Task<IActionResult> RunLogEntryAttachment(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "log-entries/{missionId:guid}/{logEntryId:guid}/attachments/{attachmentId:guid}")] HttpRequest req,
+            [Blob("attachments/{missionId}/{logEntryId}/{attachmentId}", FileAccess.Read, Connection = "AttachmentBlobStorage")] BlobClient attachment,
+            ILogger log)
+        {
+            try
+            {
+                var user = await RequestValidation.AuthenticateRequest(req, StandardUsers.Contributor);
+            }
+            catch (Exception ex)
+            {
+                return new UnauthorizedObjectResult(ex);
+            }
+
+            bool blobExists = await attachment.ExistsAsync();
+
+            if (!blobExists)
+                return new NotFoundResult();
+
+            var stream = await attachment.OpenReadAsync();
+            var properties = await attachment.GetPropertiesAsync();
+
+            return new FileStreamResult(stream, properties.Value.ContentType);
         }
     }
 }

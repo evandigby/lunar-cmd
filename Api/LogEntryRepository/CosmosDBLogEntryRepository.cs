@@ -35,9 +35,26 @@ namespace api.LogEntryRepository
             }
         }
 
+        private static string LogEntryDocLink(Guid id)
+        {
+            return $"dbs/{logEntryDb}/colls/{logEntryCollection}/docs/{id}";
+        }
+
+        public async Task<LogEntry> CreatePlaceholderById(Guid missionId, Guid id, IEnumerable<LogEntryAttachment> attachments, CancellationToken cancellationToken)
+        {
+            await logEntries.AddAsync(new PlaceholderLogEntry
+            {
+                Id = id,
+                MissionId = missionId,
+                Attachments = attachments.ToList(),
+            }.Serialize(), cancellationToken);
+
+            return await GetById(id, missionId, cancellationToken);
+        }
+
         public async Task<LogEntry> GetById(Guid id, Guid missionId, CancellationToken cancellationToken)
         {
-            var docLink = $"dbs/{logEntryDb}/colls/{logEntryCollection}/docs/{id}";
+            var docLink = LogEntryDocLink(id);
 
             var currentLogEntry = await logEntryDocumentClient.ReadDocumentAsync(docLink, new RequestOptions
             {

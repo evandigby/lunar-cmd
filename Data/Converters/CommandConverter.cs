@@ -18,6 +18,7 @@ namespace Data.Converters
             {
                 CommandType.AppendLogItem => JsonSerializer.Deserialize<AppendLogEntryCommand>(document.RootElement.GetRawText(), options),
                 CommandType.UpdateLogItem => JsonSerializer.Deserialize<UpdateLogEntryCommand>(document.RootElement.GetRawText(), options),  
+                CommandType.UploadAttachment => JsonSerializer.Deserialize<UploadAttachmentCommand>(document.RootElement.GetRawText(), options),
                 _ => throw new JsonException(),
             };
         }
