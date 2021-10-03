@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Data.Commands
 {
-    public class BinaryPayloadReference : CommandPayload
+    public class BinaryReferencePayload : CommandPayload
     {
         public override PayloadType PayloadType => PayloadType.BinaryReference;
         public Guid AttachmentId { get; set; }

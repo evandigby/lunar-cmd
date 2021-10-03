@@ -35,10 +35,9 @@ namespace api.LogEntryRepository
             }
         }
 
-        private static string LogEntryDocLink(Guid id)
-        {
-            return $"dbs/{logEntryDb}/colls/{logEntryCollection}/docs/{id}";
-        }
+        private static string LogEntryCollection => $"dbs/{logEntryDb}/colls/{logEntryCollection}";
+        private static string LogEntryDocLink(Guid id) => LogEntryDocLink(id.ToString());
+        private static string LogEntryDocLink(string id) => $"{LogEntryCollection}/docs/{id}";
 
         public async Task<LogEntry> CreatePlaceholderById(Guid missionId, Guid id, IEnumerable<LogEntryAttachment> attachments, CancellationToken cancellationToken)
         {
@@ -62,6 +61,27 @@ namespace api.LogEntryRepository
             }, cancellationToken: cancellationToken);
 
             return LogEntry.Deserialize(currentLogEntry.Resource.ToString());
+        }
+
+        public Task FinalizeLogEntriesByUserId(string userId, CancellationToken cancellationToken)
+        {
+            var query = new SqlQuerySpec(
+                "SELECT * from l where l.user.id = @userId",
+                new SqlParameterCollection(new SqlParameter[] { new SqlParameter { Name = "@userId", Value = userId } }));
+
+            var documents = logEntryDocumentClient.CreateDocumentQuery(LogEntryCollection, query, new FeedOptions { EnableCrossPartitionQuery = true }).AsEnumerable();
+
+            var tasks = new List<Task>();
+            foreach (dynamic document in documents)
+            {
+                document.isFinalized = true;
+
+                tasks.Add(logEntryDocumentClient.UpsertDocumentAsync(LogEntryCollection, document, cancellationToken: cancellationToken));
+            }
+
+            Task.WaitAll(tasks.ToArray(), cancellationToken);
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -39,6 +39,10 @@ namespace LunarAPIClient.CommandProcessors
             {
                 processor = new UpdateLogEntryCommandProcessor(_logEntryRepository);
             }
+            else if (cmd is FinalizeUserLogEntriesCommand)
+            {
+                processor = new FinalizeUserLogEntriesCommandProcessor(_logEntryRepository);
+            }
             else
             {
                 throw new Exception("Unknown command type");

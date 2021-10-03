@@ -52,7 +52,7 @@ namespace LunarAPIClient.CommandProcessors
                 throw new Exception("only placeholders should exist here");
             }
 
-            if (cmd.Payload is PlaintextPayloadValue plaintextPayloadValue)
+            if (cmd.Payload is PlaintextPayload plaintextPayloadValue)
             {
                 entry = new PlaintextLogEntry
                 {
