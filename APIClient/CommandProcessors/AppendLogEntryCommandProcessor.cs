@@ -78,8 +78,6 @@ namespace LunarAPIClient.CommandProcessors
                     return existingAttachment;
                 }
 
-                a.ContentType = logEntryAttachmentContentTypeRepository.GetFileContentType(a.Name);
-
                 return a;
             }).ToList();
 

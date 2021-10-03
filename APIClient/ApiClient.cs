@@ -17,7 +17,6 @@ namespace LunarAPIClient
             httpClient = client;
         }
 
-
         public Uri BaseAddress => httpClient.BaseAddress ?? new Uri("https://www.bing.com"); // Should never happen
     }
 }

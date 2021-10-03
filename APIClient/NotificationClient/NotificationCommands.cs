@@ -10,6 +10,7 @@ namespace LunarAPIClient.NotificationClient
     {
         public const string NewLogEntry = "newLogEntry";
         public const string UpdateLogEntry = "updateLogEntry";
-        public const string UpdateLogEntryAttachment = "updateLogEntryAttachment";
+        public const string LogEntryAttachmentUploadComplete = "logEntryAttachmentUploadComplete";
+        public const string SendCommand = "sendCommand";
     }
 }

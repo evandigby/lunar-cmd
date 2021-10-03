@@ -33,6 +33,7 @@ namespace Client.State
             };
 
             User = new();
+            Attachments = new();
         }
 
         public void UpdateUser(Data.Users.User newUser)
@@ -53,5 +54,6 @@ namespace Client.State
         public Api Api { get; set; }
         public Mission Mission { get; set; }
         public User User { get; set; }
+        public Attachments Attachments { get; set; }
     }
 }

@@ -1,4 +1,6 @@
 ﻿@using System.IO
+@using LunarAPIClient.NotificationClient
+@using System.Net.Http.Headers
 
 @inject ICommandClient commandClient
 
@@ -43,7 +45,6 @@
         StateHasChanged();
     }
 
-    private const long blockSize = 1024 * 128; // 128k -- max event hub message size is 256k
     private const long maxFileSize = 1024 * 1024 * 50; // 50mb
     private async Task Enter(EditContext editContext)
     {
@@ -51,7 +52,6 @@
         StateHasChanged();
         var attachments = selectedFiles?.Select(f =>
             {
-                var totalBlocks = (int)Math.Ceiling((decimal)f.Size / (decimal)blockSize);
                 return new
                 {
                     file = f,
@@ -59,9 +59,7 @@
                         {
                             Id = Guid.NewGuid(),
                             Name = f.Name,
-                            Alt = "Alternate Text",
-                            PartsUploaded = 0,
-                            TotalParts = totalBlocks
+                            Alt = "Alternate Text"
                         },
                 };
             }).ToList();
@@ -80,7 +78,7 @@
 
         try
         {
-            await commandClient.SendCommand(entryCmd, src.Token);
+            await commandClient.SendCommands(new[] { entryCmd }, src.Token);
         }
         catch (AccessTokenNotAvailableException exception)
         {
@@ -89,37 +87,36 @@
 
         if (attachments != null)
         {
+            using var content = new MultipartFormDataContent();
+            var commands = new List<Command>();
             foreach (var attachment in attachments)
             {
-                using Stream input = attachment.file.OpenReadStream(maxFileSize, src.Token);
+                var file = attachment.file;
+                var fileContent = new StreamContent(file.OpenReadStream(maxFileSize, src.Token));
 
-                var currentBlock = 1;
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
 
-                byte[] buffer = new byte[blockSize];
-                int bytesRead;
-                while ((bytesRead = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                content.Add(
+                    content: fileContent,
+                    name: attachment.attachment.Id.ToString(),
+                    fileName: file.Name
+                );
+            }
+
+            try
+            {
+                var results = await commandClient.SendAttachmentsCommand(CurrentMission.Id, entryCmd.LogEntryId, content, src.Token);
+
+                var errors = results.Where(r => !r.Success);
+
+                if (errors.Any())
                 {
-                    var fileCmd = new UploadAttachmentPartCommand
-                        {
-                            LogEntryId = entryCmd.LogEntryId,
-                            Payload = new BinaryPayloadValue
-                            {
-                                AttachmentId = attachment.attachment.Id,
-                                Value = buffer,
-                                PartNumber = currentBlock++,
-                                TotalParts = attachment.attachment.TotalParts,
-                                OriginalFileName = attachment.attachment.Name
-                            }
-                        };
-                    try
-                    {
-                        await commandClient.SendCommand(fileCmd, src.Token);
-                    }
-                    catch (AccessTokenNotAvailableException exception)
-                    {
-                        exception.Redirect();
-                    }
+                    throw new AggregateException(errors.Select(e => new Exception(e.Error)));
                 }
+            }
+            catch (AccessTokenNotAvailableException exception)
+            {
+                exception.Redirect();
             }
         }
 

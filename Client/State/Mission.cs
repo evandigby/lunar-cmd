@@ -26,27 +26,6 @@ namespace Client.State
             UpdateLogs();
         }
 
-        public void UpdateLogEntryProgress(LogEntryAttachmentPartUploadProgress progress)
-        {
-            _logEntries = _logEntries.Select(entry =>
-            {
-                if (entry.Id != progress.LogEntryId)
-                    return entry;
-
-                entry.Attachments = entry.Attachments.Select(attachment =>
-                {
-                    if (attachment.Id != progress.AttachmentId)
-                        return attachment;
-
-                    attachment.PartsUploaded = progress.NumUploaded;
-
-                    return attachment;
-                }).ToList();
-
-                return entry;
-            }).ToList();
-        }
-
         public void AddLogEntries(IEnumerable<LogEntry> entries)
         {
             _logEntries.AddRange(entries);
