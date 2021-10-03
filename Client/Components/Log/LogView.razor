@@ -4,9 +4,9 @@
 
 <Datagrid Items="CurrentLog.LogEntries.ToList<LogEntry>()">
     <DatagridColumn Title="Logged At" TRowData="LogEntry" Field="c => c.UpdatedAt" CanSort="true" />
-    <DatagridColumn Title="Logged By" TRowData="LogEntry" Field="c => c.User.Name" CanSort="true" />
+    <DatagridColumn Title="Logged By" TRowData="LogEntry" Field="c => c.User.Name" FilterPlaceholder="Filter Name" CanSort="true" CanFilter="true" FiterMatch="(f) => StartsWithMatch(f)" />
     <DatagridColumn Title="Log Entry" TRowData="LogEntry">
-        <LogEntryView Value="@context" CanEdit="false" />
+        <LogEntryView Value="@context" />
     </DatagridColumn>
 
     <DatagridFooter TRowData="LogEntry">
@@ -18,6 +18,11 @@
 
 @code {
     public DatagridPagination<LogEntry> Paginator;
+
+    public bool StartsWithMatch(FilterInput input)
+    {
+        return input != null && input.Value != null && input.Value.ToString().ToLower().StartsWith((input.Filter.ToString().ToLower()));
+    }
 
     [Parameter]
 
