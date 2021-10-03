@@ -11,19 +11,16 @@ using System.Threading.Tasks;
 
 namespace LunarAPIClient.CommandProcessors
 {
-    internal class UploadAttachmentPartCommandProcessor : LogEntryProducingCommandProcessor, ICommandProcessor
+    internal class UploadAttachmentPartCommandProcessor : NotificationProducingCommandProcessor, ICommandProcessor
     {
-        private readonly ILogEntryRepository _logEntryRepository;
         private readonly ILogEntryAttachmentRepository _logEntryAttachmentRepository;
         private readonly ILogEntryAttachmentContentTypeRepository _logEntryAttachmentContentTypeRepository;
 
         public UploadAttachmentPartCommandProcessor(
             ILogEntryAttachmentRepository logEntryAttachmentRepository,
-            ILogEntryRepository logEntryRepository, 
             ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository)
         {
             this._logEntryAttachmentRepository = logEntryAttachmentRepository;
-            this._logEntryRepository = logEntryRepository;
             this._logEntryAttachmentContentTypeRepository = logEntryAttachmentContentTypeRepository;
         }
 
@@ -31,60 +28,26 @@ namespace LunarAPIClient.CommandProcessors
         {
             if (cmd.Payload is BinaryPayloadValue binaryPayloadValue)
             {
-                LogEntry logEntry;
-                try
-                {
-                    logEntry = await _logEntryRepository.GetById(cmd.LogEntryId, cmd.MissionId, cancellationToken);
-                }
-                catch (Exception)
-                {
-                    // TODO: Handle specific types of exceptions
-                    logEntry = await _logEntryRepository.CreatePlaceholderById(
-                        cmd.MissionId, 
-                        cmd.LogEntryId, 
-                        new LogEntryAttachment[]
-                        {
-                            new LogEntryAttachment
-                            {
-                                Id = binaryPayloadValue.AttachmentId,
-                                TotalParts = binaryPayloadValue.TotalParts,
-                                ContentType = _logEntryAttachmentContentTypeRepository.GetFileContentType(binaryPayloadValue.OriginalFileName),
-                                PartsUploaded = 0,
-                                Name = binaryPayloadValue.OriginalFileName,
-                            }
-                        },
-                        cancellationToken);
-                }
-
-                var numUploaded = await _logEntryAttachmentRepository.UploadAttachmentPart(
+                var complete = await _logEntryAttachmentRepository.UploadAttachmentPart(
                     cmd.MissionId, 
                     cmd.LogEntryId, 
                     binaryPayloadValue,
                     _logEntryAttachmentContentTypeRepository.GetFileContentType(binaryPayloadValue.OriginalFileName),
                     cancellationToken);
 
+                if (!complete)
+                    return;
 
-                logEntry.Attachments = logEntry.Attachments.Select(a =>
-                {
-                    if (a.Id != binaryPayloadValue.AttachmentId)
-                        return a;
-
-                    a.PartsUploaded = numUploaded;
-
-                    return a;
-                }).ToList();
-
-                ProduceLogEntry(logEntry);
+                // Must be upload race conditions
                 ProduceNotification(new Notification
                 {
                     Audience = Audience.Everyone,
-                    CommandTarget = NotificationCommands.UpdateLogEntryAttachment,
-                    Message = new LogEntryAttachmentPartUploadProgress
+                    CommandTarget = NotificationCommands.LogEntryAttachmentUploadComplete,
+                    Message = new LogEntryAttachmentPartUploadComplete
                     {
+                        MissionId = cmd.MissionId,
                         LogEntryId = cmd.LogEntryId,
                         AttachmentId = binaryPayloadValue.AttachmentId,
-                        NumUploaded = numUploaded,
-                        Total = binaryPayloadValue.TotalParts
                     }
                 });
             }
@@ -94,7 +57,7 @@ namespace LunarAPIClient.CommandProcessors
             }
         }
 
-        public override Task ProcessCommand(Command cmd, CancellationToken cancellationToken) => 
+        public Task ProcessCommand(Command cmd, CancellationToken cancellationToken) => 
             ProcessCommand((UploadAttachmentPartCommand)cmd, cancellationToken);
     }
 }

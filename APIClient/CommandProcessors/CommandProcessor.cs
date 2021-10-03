@@ -45,8 +45,7 @@ namespace LunarAPIClient.CommandProcessors
             else if (cmd is UploadAttachmentPartCommand)
             {
                 processor = new UploadAttachmentPartCommandProcessor(
-                    _logEntryAttachmentRepository, 
-                    _logEntryRepository, 
+                    _logEntryAttachmentRepository,
                     _logEntryAttachmentContentTypeRepository);
             }
             else

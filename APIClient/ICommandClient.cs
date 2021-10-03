@@ -9,6 +9,6 @@ namespace LunarAPIClient
 {
     public interface ICommandClient
     {
-        public Task SendCommand(Command cmd, CancellationToken cancellationToken);
+        public Task SendCommands(IEnumerable<Command> cmds, CancellationToken cancellationToken);
     }
 }

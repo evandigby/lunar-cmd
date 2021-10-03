@@ -17,9 +17,9 @@ namespace LunarAPIClient
         protected override string ApiVersion => "v1.0";
         protected override string ApiEndpoint => $"/api/{ApiVersion}/commands";
 
-        public async Task SendCommand(Command cmd, CancellationToken cancellationToken)
+        public async Task SendCommands(IEnumerable<Command> cmds, CancellationToken cancellationToken)
         {
-            await httpClient.PostAsJsonAsync(ApiEndpoint, cmd, cancellationToken);
+            await httpClient.PostAsJsonAsync(ApiEndpoint, cmds.ToList(), cancellationToken);
         }
     }
 }

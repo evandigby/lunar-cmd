@@ -13,6 +13,11 @@ using Data.Users;
 using api.Auth;
 using Data.Converters;
 using System.Text;
+using System.Collections.Generic;
+using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using api.LogEntryRepository;
+using api.NotificationClient;
 
 namespace api.REST
 {
@@ -21,7 +26,10 @@ namespace api.REST
         [FunctionName("SendCommand")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "commands")] HttpRequest req,
-            [EventHub("%EventHubName%", Connection = "EventHubs")] IAsyncCollector<string> commands,
+            [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBCommandsCollectionName%", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> commands,
+            [SignalR(HubName = "%SignalRHubName%", ConnectionStringSetting = "AzureSignalRConnectionString")] IAsyncCollector<SignalRMessage> messages,
+            [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBLogEntriesCollectionName%", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> logEntries,
+            [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBLogEntriesCollectionName%", ConnectionStringSetting = "CosmosDB")] DocumentClient logEntryDocumentClient,
             ILogger log,
             CancellationToken cancellationToken)
         {
@@ -37,42 +45,53 @@ namespace api.REST
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, req.HttpContext.RequestAborted);
 
-            Command command;
+            List<Command> inputCommands;
             try
             {
-                command = await Command.DeserializeAsync(req.Body, cancellationSource.Token);
-                command.User = user;
-                command.ReceivedAt = DateTime.UtcNow;
-
-                log.LogInformation($"Received {command.Name} command from {command.User.Id} ({command.User.Name})");
+                inputCommands = await Command.DeserializeListAsync(req.Body, cancellationSource.Token);
             }
             catch (Exception ex)
             {
                 return new BadRequestObjectResult(ex);
             }
 
-            try
+            var attachmentConnectionString = Environment.GetEnvironmentVariable("AttachmentBlobStorage");
+            var attachmentBlobContainer = Environment.GetEnvironmentVariable("AttachmentBlobContainer");
+
+            var logEntryAttachmentRepository = new AzureBlobStorageLogEntryAttachmentRepository(attachmentConnectionString, attachmentBlobContainer);
+            var logEntryRepository = new CosmosDBLogEntryRepository(logEntries, logEntryDocumentClient);
+            var signalRNotificationClient = new SignalRNotificationClient(messages);
+            var logEntryAttachmentContentTypeRepository = new FileExtenstionContentTypeProvderLogEntryAttachmentContentTypeRepository();
+
+            var exceptions = new List<Exception>();
+            var commandProcessor = new LunarAPIClient.CommandProcessors.CommandProcessor(
+                logEntryRepository,
+                signalRNotificationClient,
+                logEntryAttachmentRepository,
+                logEntryAttachmentContentTypeRepository);
+
+            foreach (var command in inputCommands)
             {
-                var serialized = command.Serialize();
-                // Ignore too big for now. Later handle better
-                if (Encoding.UTF8.GetByteCount(serialized) < 1024 * 256)
+                command.User = user;
+                command.ReceivedAt = DateTime.UtcNow;
+                try
                 {
-                    await commands.AddAsync(serialized, cancellationSource.Token);
+                    await commands.AddAsync(command.Serialize(), cancellationToken);
+                    await commandProcessor.ProcessCommand(command, cancellationToken);
                 }
-                else
+                catch (Exception e)
                 {
-                    log.LogError($"Got too-large message: {Encoding.UTF8.GetByteCount(serialized)}");
+                    exceptions.Add(e);
                 }
-            }
-            catch (Exception ex)
-            {
-                return new ObjectResult(ex)
-                {
-                    StatusCode = StatusCodes.Status502BadGateway
-                };
             }
 
-            return new AcceptedResult();
+            if (!exceptions.Any())
+                return new AcceptedResult();
+
+            if (exceptions.Count == 1)
+                throw exceptions.Single();
+
+            throw new AggregateException(exceptions);
         }
     }
 }

@@ -39,5 +39,20 @@ namespace Data.Commands
         {
             return JsonSerializer.DeserializeAsync<Command>(payload, ConverterOptions.JsonSerializerOptions, cancellationToken);
         }
+
+        public static ValueTask<List<Command>> DeserializeListAsync(Stream payload, CancellationToken cancellationToken)
+        {
+            return JsonSerializer.DeserializeAsync<List<Command>>(payload, ConverterOptions.JsonSerializerOptions, cancellationToken);
+        }
+
+        public static List<Command> DeserializeList(string payload)
+        {
+            return JsonSerializer.Deserialize<List<Command>>(payload, ConverterOptions.JsonSerializerOptions);
+        }
+
+        public static string SerializeList(List<Command> cmds)
+        {
+            return JsonSerializer.Serialize(cmds, ConverterOptions.JsonSerializerOptions);
+        }
     }
 }

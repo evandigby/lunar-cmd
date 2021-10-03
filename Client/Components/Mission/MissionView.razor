@@ -2,6 +2,7 @@
 @using System.IO
 @attribute [Authorize]
 
+@inject IAccessTokenProvider accessTokenProvider
 @inject StateContainer state
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IUserClient userClient
@@ -9,6 +10,7 @@
 @inject IHubConnectionFactory hubConnectionFactory
 @inject ICommandClient commandClient
 @inject Mission CurrentMission
+@inject Attachments Attachments
 
 @implements IAsyncDisposable
 
@@ -35,15 +37,8 @@
     {
         if (firstRender)
         {
-            var src = new CancellationTokenSource();
-
-            state.UpdateUser(await userClient.Me(src.Token));
-
-            await LoadLogEntries();
-
-            StateHasChanged();
-
             hubConnection = await hubConnectionFactory.ConnectHub(
+                accessTokenProvider,
                 hub =>
                 {
                     hub.On<LogEntry>(NotificationCommands.NewLogEntry, logEntry =>
@@ -58,28 +53,60 @@
                         StateHasChanged();
                     });
 
-                    hub.On<LogEntryAttachmentPartUploadProgress>(NotificationCommands.UpdateLogEntryAttachment, uploadProgress =>
+                    hub.On<LogEntryAttachmentPartUploadComplete>(NotificationCommands.LogEntryAttachmentUploadComplete, async uploadProgress =>
                     {
-                        CurrentMission.UpdateLogEntryProgress(uploadProgress);
+                        var src = new CancellationTokenSource();
+                        await Attachments.UpdateLogEntryProgress(uploadProgress, logEntryClient, src.Token);
                         StateHasChanged();
                     });
                 });
+
+            StateHasChanged();
+            var src = new CancellationTokenSource();
+
+            state.UpdateUser(await userClient.Me(src.Token));
+
+            await LoadLogEntries();
+
+            StateHasChanged();
         }
 
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    private async Task WaitOnTasks(IEnumerable<Task> tasks)
+    {
+        var currentTasks = tasks.ToList();
+        while (currentTasks.Any())
+        {
+            Task finishedTask = await Task.WhenAny(tasks);
+            currentTasks.Remove(finishedTask);
+            StateHasChanged();
+        }
+    }
     private async Task LoadLogEntries()
     {
         var src = new CancellationTokenSource();
 
         try
         {
-            var entries = await logEntryClient.GetLogEntriesByMissionId(MissionID, src.Token);
+            var entries = (await logEntryClient.GetLogEntriesByMissionId(MissionID, src.Token)).OrderByDescending(e => e.LoggedAt);
 
-            CurrentMission.AddLogEntries(entries.OrderByDescending(e => e.LoggedAt));
-
+            CurrentMission.AddLogEntries(entries);
             StateHasChanged();
+
+            foreach (var entry in entries)
+            {
+                foreach (var attachment in entry.Attachments)
+                {
+                    if (Attachments.Get(attachment.Id) != null)
+                        continue;
+
+                    await Attachments.AddAttachment(logEntryClient, MissionID, entry.Id, attachment.Id, src.Token);
+
+                    StateHasChanged();
+                }
+            }
         }
         catch (AccessTokenNotAvailableException exception)
         {

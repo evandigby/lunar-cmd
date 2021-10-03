@@ -23,7 +23,7 @@ namespace api.LogEntryRepository
             this.blobContainerClient = new BlobContainerClient(azureStorageConnectionString, containerName);
         }
 
-        public async Task<int> UploadAttachmentPart(Guid missionId, Guid logEntryId, BinaryPayloadValue binaryPayloadValue, string contentType, CancellationToken cancellationToken)
+        public async Task<bool> UploadAttachmentPart(Guid missionId, Guid logEntryId, BinaryPayloadValue binaryPayloadValue, string contentType, CancellationToken cancellationToken)
         {
             var blockBlobClient = blobContainerClient.GetBlockBlobClient(BlobPath(missionId, logEntryId, binaryPayloadValue.AttachmentId));
 
@@ -36,18 +36,22 @@ namespace api.LogEntryRepository
 
             var blockList = await blockBlobClient.GetBlockListAsync(cancellationToken: cancellationToken);
 
-            if (blockList?.Value?.UncommittedBlocks?.Count() == binaryPayloadValue.TotalParts)
-            {
-                await blockBlobClient.CommitBlockListAsync(
-                    blockList.Value.UncommittedBlocks.OrderBy(b => BlockNumFromId(b.Name)).Select(b => b.Name),
-                    httpHeaders: new BlobHttpHeaders
-                    {
-                        ContentType = contentType
-                    },
-                    cancellationToken: cancellationToken);
-            }
+            if (blockList?.Value?.UncommittedBlocks?.Count() < binaryPayloadValue.TotalParts)
+                return false;
 
-            return blockList?.Value?.UncommittedBlocks?.Count() ?? 0;
+            var ordered = blockList.Value.UncommittedBlocks.OrderBy(b => BlockNumFromId(b.Name));
+
+            var nums = ordered.Select(b => BlockNumFromId(b.Name)).ToArray();
+
+            await blockBlobClient.CommitBlockListAsync(
+                blockList.Value.UncommittedBlocks.OrderBy(b => BlockNumFromId(b.Name)).Select(b => b.Name),
+                httpHeaders: new BlobHttpHeaders
+                {
+                    ContentType = contentType
+                },
+                cancellationToken: cancellationToken);
+
+            return true;
         }
 
         public static int BlockNumFromId(string base64Id)

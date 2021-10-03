@@ -1,4 +1,5 @@
 ﻿@using System.IO
+@using LunarAPIClient.NotificationClient
 
 @inject ICommandClient commandClient
 
@@ -43,6 +44,7 @@
         StateHasChanged();
     }
 
+    private const int cmdBatchSize = 10;
     private const long blockSize = 1024 * 128; // 128k -- max event hub message size is 256k
     private const long maxFileSize = 1024 * 1024 * 50; // 50mb
     private async Task Enter(EditContext editContext)
@@ -51,7 +53,6 @@
         StateHasChanged();
         var attachments = selectedFiles?.Select(f =>
             {
-                var totalBlocks = (int)Math.Ceiling((decimal)f.Size / (decimal)blockSize);
                 return new
                 {
                     file = f,
@@ -59,9 +60,7 @@
                         {
                             Id = Guid.NewGuid(),
                             Name = f.Name,
-                            Alt = "Alternate Text",
-                            PartsUploaded = 0,
-                            TotalParts = totalBlocks
+                            Alt = "Alternate Text"
                         },
                 };
             }).ToList();
@@ -80,7 +79,7 @@
 
         try
         {
-            await commandClient.SendCommand(entryCmd, src.Token);
+            await commandClient.SendCommands(new[] { entryCmd }, src.Token);
         }
         catch (AccessTokenNotAvailableException exception)
         {
@@ -89,9 +88,12 @@
 
         if (attachments != null)
         {
+            var commands = new List<Command>();
             foreach (var attachment in attachments)
             {
                 using Stream input = attachment.file.OpenReadStream(maxFileSize, src.Token);
+
+                var totalBlocks = (int)Math.Ceiling((decimal)attachment.file.Size / (decimal)blockSize);
 
                 var currentBlock = 1;
 
@@ -99,26 +101,47 @@
                 int bytesRead;
                 while ((bytesRead = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
                 {
+                    byte[] bufCopy = new byte[blockSize];
+                    Array.Copy(buffer, bufCopy, bytesRead);
                     var fileCmd = new UploadAttachmentPartCommand
                         {
                             LogEntryId = entryCmd.LogEntryId,
                             Payload = new BinaryPayloadValue
                             {
                                 AttachmentId = attachment.attachment.Id,
-                                Value = buffer,
+                                Value = bufCopy.Take(bytesRead).ToArray(),
                                 PartNumber = currentBlock++,
-                                TotalParts = attachment.attachment.TotalParts,
+                                TotalParts = totalBlocks,
                                 OriginalFileName = attachment.attachment.Name
                             }
                         };
-                    try
+
+                    commands.Add(fileCmd);
+
+                    if (commands.Count == cmdBatchSize)
                     {
-                        await commandClient.SendCommand(fileCmd, src.Token);
+                        try
+                        {
+                            await commandClient.SendCommands(commands, src.Token);
+                            commands = new List<Command>();
+                        }
+                        catch (AccessTokenNotAvailableException exception)
+                        {
+                            exception.Redirect();
+                        }
                     }
-                    catch (AccessTokenNotAvailableException exception)
-                    {
-                        exception.Redirect();
-                    }
+                }
+            }
+
+            if (commands.Count > 0)
+            {
+                try
+                {
+                    await commandClient.SendCommands(commands, src.Token);
+                }
+                catch (AccessTokenNotAvailableException exception)
+                {
+                    exception.Redirect();
                 }
             }
         }

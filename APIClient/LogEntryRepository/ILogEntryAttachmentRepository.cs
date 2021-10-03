@@ -17,6 +17,6 @@ namespace LunarAPIClient.LogEntryRepository
         /// <param name="binaryPayloadValue"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task<int> UploadAttachmentPart(Guid missionId, Guid logEntryId, BinaryPayloadValue binaryPayloadValue, string contentType, CancellationToken cancellationToken);
+        public Task<bool> UploadAttachmentPart(Guid missionId, Guid logEntryId, BinaryPayloadValue binaryPayloadValue, string contentType, CancellationToken cancellationToken);
     }
 }
