@@ -17,6 +17,11 @@ namespace Client.State
 
         public void AddLogEntry(LogEntry entry)
         {
+            if (!IsLogEntryValid(entry))
+            {
+                // Should log bad data error probably
+                return;
+            }
             _logEntries.Add(entry);
             UpdateLogs();
         }
@@ -28,8 +33,13 @@ namespace Client.State
 
         public void AddLogEntries(IEnumerable<LogEntry> entries)
         {
-            _logEntries.AddRange(entries);
+            _logEntries.AddRange(entries.Where(IsLogEntryValid));
             UpdateLogs();
+        }
+
+        public static bool IsLogEntryValid(LogEntry entry)
+        {
+            return entry.User?.Id != default;
         }
 
         private void UpdateLogs()
