@@ -4,8 +4,10 @@
 
 <Datagrid Items="CurrentLog.LogEntries.ToList<LogEntry>()">
     <DatagridColumn Title="Logged At" TRowData="LogEntry" Field="c => c.UpdatedAt" CanSort="true" />
-    <DatagridColumn Title="Logged By" TRowData="LogEntry" Field="c => c.User.Id" CanSort="true" />
-    <DatagridColumn Title="Log Entry" TRowData="LogEntry" Field="c => c" CanSort="true" />
+    <DatagridColumn Title="Logged By" TRowData="LogEntry" Field="c => c.User.Name" CanSort="true" />
+    <DatagridColumn Title="Log Entry" TRowData="LogEntry">
+        <LogEntryView Value="@context" CanEdit="false" />
+    </DatagridColumn>
 
     <DatagridFooter TRowData="LogEntry">
         <DatagridPagination @ref="Paginator" TRowData="LogEntry" PageSize="10" PageSizes="new int[] { 1, 3, 5, 10, 20, 30 }" PageSizeLabel="Log entries per page">
