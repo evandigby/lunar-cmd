@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace LunarAPIClient.NotificationClient
 {
-    public class LogEntryAttachmentPartUploadProgress
+    public class LogEntryAttachmentUploadComplete
     {
+        public Guid MissionId { get; set; }
         public Guid LogEntryId { get; set; }
         public Guid AttachmentId { get; set; }
-        public int NumUploaded { get; set; }
-        public int Total { get; set; }
     }
 }

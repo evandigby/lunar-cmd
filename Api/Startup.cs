@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Data.Converters;
+using Microsoft.AspNetCore.Http.Features;
 
 [assembly: WebJobsStartup(typeof(api.Startup))]
 namespace api
@@ -16,6 +17,12 @@ namespace api
     {
         public void Configure(IWebJobsBuilder builder)
         {
+            builder.Services.Configure<FormOptions>(x =>
+            {
+                x.ValueLengthLimit = int.MaxValue;
+                x.MultipartBodyLengthLimit = int.MaxValue; 
+            });
+
             builder.Services
                 .AddSignalR()
                 .AddJsonProtocol(options =>

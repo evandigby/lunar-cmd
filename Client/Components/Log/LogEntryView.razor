@@ -18,13 +18,7 @@
         <div style="display:flex;flex-direction:row;">
             @foreach (var attachment in Value.Attachments)
             {
-                var attachmentVal = attachment;
-                <LogEntryAttachmentView 
-                    Attachment=attachmentVal 
-                    LogEntryId=Value.Id 
-                    TotalParts=attachmentVal.TotalParts 
-                    PartsUploaded=attachmentVal.PartsUploaded 
-                    UploadComplete=attachmentVal.UploadComplete />
+                <LogEntryAttachmentView Attachment=attachment />
             }
         </div>
     }
@@ -104,7 +98,7 @@
 
         try
         {
-            await commandClient.SendCommand(cmd, src.Token);
+            await commandClient.SendCommands(new[] { cmd }, src.Token);
         }
         catch (AccessTokenNotAvailableException exception)
         {

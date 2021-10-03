@@ -4,7 +4,8 @@ namespace LunarAPIClient
 {
     public class LogEntryAttachmentData
     {
-        public LogEntryAttachment Attachment { get; set; } = new LogEntryAttachment();
+        public Guid AttachmentId { get; set; } = Guid.Empty;
+        public string ContentType { get; set; } = string.Empty;
         public string DataURI { get; set; } = string.Empty;
     }
 }

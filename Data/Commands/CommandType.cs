@@ -7,6 +7,6 @@
     {
         AppendLogItem = 0,
         UpdateLogItem = 1,
-        UploadAttachmentPart = 2,
+        UploadAttachment = 2,
     }
 }

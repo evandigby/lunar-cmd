@@ -1,67 +1,42 @@
 ﻿@inject Mission mission
 @inject ILogEntryClient logEntryClient
+@inject Attachments Attachments
 
 <div style="flex-grow:0;flex-shrink:0;padding:2px;">
-    @if (Attachment.UploadComplete)
+    @if (attachmentData == null)
     {
-        @if (AttachmentData == null)
-        {
-            <FluentSkeleton style="width:100px;height:100px" />
-        }
-        else
-        {
-            @if (@AttachmentData.DataURI.StartsWith("data:image/"))
-            {
-                <img src=@AttachmentData.DataURI style="max-width:5vw;max-height=5vh" @onclick=OnClick />
-
-                @if (ShowFullSize)
-                {
-                    <FluentDialog style="text-align:center;vertical-align:middle" @onclick=OnClick>
-                        <img sytle="object-fit:contain;" src=@AttachmentData.DataURI @onclick=OnClick />
-                    </FluentDialog>
-                }
-            }
-            else
-            {
-                <div>Invalid attachment type</div>
-            }
-        }
+        <FluentSkeleton style="width:100px;height:100px" />
     }
     else
     {
-        <FluentProgressRing />
+        @if (attachmentData.DataURI.StartsWith("data:image/"))
+        {
+            <img src=@attachmentData.DataURI style="max-width:5vw;max-height:5vh" @onclick=OnClick />
+
+            @if (ShowFullSize)
+            {
+                <FluentDialog style="text-align:center;vertical-align:middle" @onclick=OnClick>
+                    <img sytle="object-fit:contain;" src=@attachmentData.DataURI @onclick=OnClick />
+                </FluentDialog>
+            }
+        }
+        else
+        {
+            <div>Invalid attachment type</div>
+        }
     }
 </div>
+
 @code {
     [Parameter, EditorRequired]
-    public Guid LogEntryId { get; set; } = Guid.Empty;
-
-    [Parameter, EditorRequired]
     public LogEntryAttachment Attachment { get; set; } = new LogEntryAttachment();
-    [Parameter, EditorRequired]
-    public int PartsUploaded { get; set; } = 0;
-    [Parameter, EditorRequired]
-    public int TotalParts { get; set; } = 0;
-    [Parameter, EditorRequired]
-    public bool UploadComplete { get; set; } = false;
 
-    public LogEntryAttachmentData? AttachmentData { get; set; }
+    private LogEntryAttachmentData? attachmentData => Attachments.Get(Attachment.Id);
+
     public bool ShowFullSize { get; set; }
 
     private void OnClick(MouseEventArgs e)
     {
         ShowFullSize = !ShowFullSize;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (Attachment.UploadComplete && AttachmentData == null)
-        {
-            var src = new CancellationTokenSource();
-            AttachmentData = await logEntryClient.GetLogEntryAttachment(mission.Id, LogEntryId, Attachment, src.Token);
-            StateHasChanged();
-        }
-
-        await base.OnAfterRenderAsync(firstRender);
     }
 }

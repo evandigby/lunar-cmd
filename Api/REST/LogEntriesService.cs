@@ -55,9 +55,14 @@ namespace api.REST
                 return new UnauthorizedObjectResult(ex);
             }
 
+            bool blobExists = await attachment.ExistsAsync();
+
+            if (!blobExists)
+                return new NotFoundResult();
+
             var stream = await attachment.OpenReadAsync();
             var properties = await attachment.GetPropertiesAsync();
-            
+
             return new FileStreamResult(stream, properties.Value.ContentType);
         }
     }
