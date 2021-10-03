@@ -10,9 +10,9 @@
     </fluent-data-grid-row>
     @foreach (var entry in CurrentLog.LogEntries)
     {
-        if (entry == null)
+        if (entry?.User?.Id == null)
         {
-            throw new Exception("should not have a completely null entry");
+            continue;
         }
 
         var canEdit = state.User.Id == entry.User.Id;
@@ -26,7 +26,7 @@
                     <i>Edited on @entry?.UpdatedAt</i>
                 }
             </fluent-data-grid-cell>
-            <fluent-data-grid-cell grid-column="2">@entry.User?.Name</fluent-data-grid-cell>
+            <fluent-data-grid-cell grid-column="2">@entry?.User?.Name</fluent-data-grid-cell>
             <fluent-data-grid-cell grid-column="3">
                 <LogEntryView Value=@entry CanEdit=canEdit />
             </fluent-data-grid-cell>
