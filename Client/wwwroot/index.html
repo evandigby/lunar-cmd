@@ -104,9 +104,9 @@
                 logEntryViewDotNetReference = element;
             },
 
-            //startRecordingOnce: function () {
-            //    recordOnce();
-            //},
+            triggerFileUpload: function (buttonId) {
+                document.getElementById(buttonId).click();
+            },
 
             startRecording: function () {
                 navigator.getUserMedia({ audio: true }, onSuccess, onError);
