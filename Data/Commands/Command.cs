@@ -23,7 +23,6 @@ namespace Data.Commands
         public DateTime ReceivedAt { get; set; }
         public abstract CommandType CommandType { get; }
         public CommandPayload Payload { get; set; }
-
         public Command()
         {
             Id = Guid.NewGuid();

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Data.Notifications
 {
-    internal interface INotificationProducer
+    public interface INotificationProducer
     {
         public IEnumerable<Notification> Notifications { get; }
     }

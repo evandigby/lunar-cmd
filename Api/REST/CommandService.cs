@@ -26,6 +26,8 @@ using SixLabors.ImageSharp.PixelFormats;
 using Data.Log;
 using Data.Notifications;
 using LunarAPIClient.NotificationClient;
+using LunarAPIClient.CommandProcessors;
+using api.CommandWriter;
 
 namespace api.REST
 {
@@ -121,146 +123,15 @@ namespace api.REST
 
             var logEntryAttachmentRepository = new AzureBlobStorageLogEntryAttachmentRepository(attachmentConnectionString, attachmentBlobContainer);
             var signalRNotificationClient = new SignalRNotificationClient(messages);
+            var commandWriter = new AsyncCollectorCommandWriter(commands);
+
+            var processor = new BinaryStreamCommandProcessor(logEntryAttachmentRepository, signalRNotificationClient, commandWriter);
 
             using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, req.HttpContext.RequestAborted);
 
-            var uploadResults = new List<LogEntryAttachmentUploadResult>();
+            var results = await processor.ProcessCommand(user, missionId, logEntryId, req.Form.Files, cancellationSource.Token).ConfigureAwait(false);
 
-            foreach (var file in req.Form.Files)
-            {
-                if (!Guid.TryParse(file.Name, out Guid attachmentId))
-                {
-                    uploadResults.Add(new LogEntryAttachmentUploadResult
-                    {
-                        AttachmentId = Guid.Empty,
-                        Success = false,
-                        Error = $"Invalid attachment name: {file.Name} (must be Guid)",
-                    });
-                    continue;
-                }
-
-                try
-                {
-
-                    var cmd = new UploadAttachmentCommand
-                    {
-                        Id = Guid.NewGuid(),
-                        User = user,
-                        ReceivedAt = DateTime.UtcNow,
-                        CreatedAt = DateTime.UtcNow,
-                        MissionId = missionId,
-                        LogEntryId = logEntryId,
-                        Payload = new BinaryPayloadReference
-                        {
-                            AttachmentId = attachmentId,
-                            OriginalFileName = file.FileName,
-                        }
-                    };
-
-                    await commands.AddAsync(cmd.Serialize());
-
-                    await logEntryAttachmentRepository.UploadAttachment(
-                        missionId,
-                        logEntryId,
-                        attachmentId,
-                        file.OpenReadStream(),
-                        file.ContentType,
-                        cancellationToken).ConfigureAwait(false);
-
-                    log.LogInformation($"Uploaded {file.FileName} as {attachmentId}");
-                    uploadResults.Add(new LogEntryAttachmentUploadResult
-                    {
-                        AttachmentId = attachmentId,
-                        Success = true
-                    });
-
-                    await signalRNotificationClient.SendNotifications(new[] { new Notification
-                    {
-                        Audience = Audience.Everyone,
-                        CommandTarget = NotificationCommands.LogEntryAttachmentUploadComplete,
-                        Message = new LogEntryAttachmentUploadComplete
-                        {
-                            MissionId = missionId,
-                            LogEntryId = logEntryId,
-                            AttachmentId = attachmentId,
-                        }
-                    }
-                    }, cancellationToken).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    uploadResults.Add(new LogEntryAttachmentUploadResult
-                    {
-                        AttachmentId = attachmentId,
-                        Success = false,
-                        Error = ex.Message
-                    });
-                }
-            }
-            return new CreatedResult($"api/{missionId}/{logEntryId}/attachments", uploadResults);
+            return new CreatedResult($"api/{missionId}/{logEntryId}/attachments", results);
         }
-
-        //[FunctionName("ConvertAttachment")]
-        //public static async Task<IActionResult> ConvertAttachment(
-        //    [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "commands/{missionId:guid}/{logEntryId:guid}/attachments/{attachmentId:guid}")] HttpRequest req,
-        //    [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBCommandsCollectionName%", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> commands,
-        //    [SignalR(HubName = "%SignalRHubName%", ConnectionStringSetting = "AzureSignalRConnectionString")] IAsyncCollector<SignalRMessage> messages,
-        //    [Blob("attachments/{missionId}/{logEntryId}/{attachmentId}", FileAccess.Write, Connection = "AttachmentBlobStorage")] BlobClient attachment,
-        //    [Blob("attachments/{missionId}/{logEntryId}/{attachmentId}.medium", FileAccess.Write, Connection = "AttachmentBlobStorage")] BlobClient attachmentMedium,
-        //    [Blob("attachments/{missionId}/{logEntryId}/{attachmentId}.small", FileAccess.Write, Connection = "AttachmentBlobStorage")] BlobClient attachmentSmall,
-        //    Guid missionId, Guid logEntryId, Guid attachmentId,
-        //    ILogger log,
-        //    CancellationToken cancellationToken)
-        //{
-        //    User user;
-        //    try
-        //    {
-        //        user = await RequestValidation.AuthenticateRequest(req, StandardUsers.Contributor);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return new UnauthorizedObjectResult(ex);
-        //    }
-
-        //    using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, req.HttpContext.RequestAborted);
-
-        //    var exceptions = new List<Exception>();
-
-        //    IImageFormat format;
-
-        //    using (Image<Rgba32> input = Image.Load<Rgba32>(image, out format))
-        //    {
-        //        ResizeImage(input, imageSmall, ImageSize.Small, format);
-        //    }
-
-        //    image.Position = 0;
-        //    using (Image<Rgba32> input = Image.Load<Rgba32>(image, out format))
-        //    {
-        //        ResizeImage(input, imageMedium, ImageSize.Medium, format);
-        //    }
-
-        //    foreach (var command in inputCommands)
-        //    {
-        //        command.User = user;
-        //        command.ReceivedAt = DateTime.UtcNow;
-        //        try
-        //        {
-        //            await commands.AddAsync(command.Serialize(), cancellationToken);
-        //            await commandProcessor.ProcessCommand(command, cancellationToken);
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            exceptions.Add(e);
-        //        }
-        //    }
-
-        //    if (!exceptions.Any())
-        //        return new AcceptedResult();
-
-        //    if (exceptions.Count == 1)
-        //        throw exceptions.Single();
-
-        //    throw new AggregateException(exceptions);
-        //}
     }
 }
