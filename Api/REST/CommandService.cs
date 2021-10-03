@@ -121,6 +121,15 @@ namespace api.REST
             var attachmentConnectionString = Environment.GetEnvironmentVariable("AttachmentBlobStorage");
             var attachmentBlobContainer = Environment.GetEnvironmentVariable("AttachmentBlobContainer");
 
+            if (string.IsNullOrEmpty(attachmentConnectionString))
+            {
+                throw new Exception("NO CONNECTION STRING");
+            }
+
+            if (string.IsNullOrEmpty(attachmentBlobContainer))
+            {
+                throw new Exception("NO BLOB CONTAINER");
+            }
             var logEntryAttachmentRepository = new AzureBlobStorageLogEntryAttachmentRepository(attachmentConnectionString, attachmentBlobContainer);
             var signalRNotificationClient = new SignalRNotificationClient(messages);
             var commandWriter = new AsyncCollectorCommandWriter(commands);
