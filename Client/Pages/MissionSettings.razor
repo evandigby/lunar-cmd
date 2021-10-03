@@ -1,1 +1,73 @@
-﻿
+﻿@page "/mission-settings"
+
+<Card>
+    <CardHeader>
+        Artemis 1
+    </CardHeader>
+        <CardBody>
+            <CardBlock>
+                <CardMediaBlock ImageSource="img/oneGiantLeap.svg" AlternateText="image">
+                    <DescriptionTitle>Mission Summary:</DescriptionTitle>
+                        <DescriptionText>Perform maintenance on Artemis base infrastructure and collect lunar soil samples.</DescriptionText>
+                </CardMediaBlock>
+                <CardBlock>
+                    <CardText>Custom Data Entry Types: </CardText>
+                    <Tree>
+                       <TreeNode Expand="true">
+                            <TreeNodeTitle>
+                                <clr-icon shape="wrench" class="is-solid"/> Command Module Maintenance
+                            </TreeNodeTitle>
+                            <TreeChildNodes>
+                                <TreeNode>Description - String</TreeNode>
+                                <TreeNode>Start Time - Number</TreeNode>
+                                <TreeNode>End Time - Number</TreeNode>
+                                <TreeNode>Complete - Boolean</TreeNode>
+                            </TreeChildNodes>
+                        </TreeNode>
+
+                        <TreeNode Expand="true">
+                            <TreeNodeTitle>
+                                <clr-icon shape="flask" class="is-solid"/> Lunar Soil Samples
+                            </TreeNodeTitle>
+                            <TreeChildNodes>
+                                <TreeNode>Description - String</TreeNode>
+                                <TreeNode>Start Time - Number</TreeNode>
+                                <TreeNode>End Time - Number</TreeNode>
+                                <TreeNode>Amount Collected - Number</TreeNode>
+                            </TreeChildNodes>
+                        </TreeNode>
+                    </Tree>
+                </CardBlock>
+                <CardBlock>
+                    <Form Model="@model">
+                        <div class="clr-form-control">
+                            <label class="clr-control-label">Add new custom Entry</label>
+                            <div class="clr-control-container">
+                                <TextControl @bind-Value="model.Name"></TextControl>
+                                <clr-icon class="clr-validate-icon is-solid" shape="times-circle"></clr-icon>
+                                <span class="clr-subtext">Enter a custom data value name</span>
+                            </div>
+                            <div>
+                                <InputCombobox @bind-SelectedItem="model.DataType" Items="dataTypes" Label="Type" HelpText="Select a data type" />
+                            </div>
+                        </div>
+
+                        <Button type="button" style="background-image: none !important; width: 50px; margin-top: 10px;" Small="true">Add</Button>
+                        <Button type="button" style="background-image: none !important; width: 50px; margin-top: 10px;" Small="true">Delete</Button>
+                    </Form>
+                </CardBlock>
+            </CardBlock>
+        </CardBody>
+</Card>
+
+@code {
+    private DemoModel model = new DemoModel();
+
+    private string[] dataTypes = new string[] { "String", "Number", "Boolean" };
+
+    public class DemoModel
+    {
+        public string Name { get; set; }
+        public string DataType { get; set; }
+    }
+}
