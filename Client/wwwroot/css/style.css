@@ -1,4 +1,4 @@
-html,
+﻿html,
 body {
     height: 100%;
     margin: auto;
@@ -10,39 +10,34 @@ body {
     font-family: 'Poppins', sans-serif;
     overflow: hidden;
     display: table;
-    background-image: url('../img/background.jpg');
+    background-image: url('../img/background.jpg')
 }
 
-#page-cntr {
-    text-align: center;
-    display: table-cell;
-    vertical-align: middle;
-}
+
 
 .img {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    border-radius: 5px 5px 0 0;
+    height: 100px;
 }
 
 .login-content {
     transition: 0.3s;
     border-radius: 14px;
     vertical-align: middle;
-    background-color: rgba(255, 255, 255, 0.76);
-    height: 400px;
+    background-color: rgba(255, 255, 255, 0.46);
+    height: 100%;
     margin-left: auto;
     margin-right: auto;
-    width: 18em
+    width: auto;
 }
 
-img {
-    border-radius: 5px 5px 0 0;
-    height: 100px;
-}
 
 .container {
     padding: 50px 16px;
+    text-align: center;
 }
 
 .btn {
@@ -63,6 +58,9 @@ img {
     transition: .5s;
 }
 
-.btn:hover {
-    background-position: right;
+    .btn:hover {
+        background-position: right;
+    }
+a {
+    text-decoration: none;
 }

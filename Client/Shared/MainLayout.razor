@@ -1,17 +1,45 @@
 ﻿@inherits LayoutComponentBase
 
 <div style="position:absolute;width:99.9vw;height:99.5vh;overflow:hidden;display:flex;flex-direction:row;">
-    <div style="margin:5px;padding:5px;border: 1px solid black;border-radius:5px;display:flex;flex-direction:column;flex-grow=0">
-        <h3>One Giant Leap - Lunar C&C</h3>
-        <FluentAnchor style="width:100%;margin:2px;" Appearance=Appearance.Filled href=@CurrentMissionPath>Current Mission</FluentAnchor>
-        <FluentAnchor style="width:100%;margin:2px;" Appearance=Appearance.Filled href="/mission-settings">Mission Settings</FluentAnchor>
-        <FluentAnchor style="width:100%;margin:2px;" Appearance=Appearance.Filled href="/user-settings">User Settings</FluentAnchor>
-        <FluentAnchor style="width:100%;margin:2px;" Appearance=Appearance.Filled href="/about">About</FluentAnchor>
+    <div style="margin:5px;padding:5px;border: 1px solid black;border-radius:5px;display:flex;flex-direction:column;flex-grow:0">
+        <h2>One Giant Leap - Lunar C&C</h2>
+        <FluentAnchor class="anchor" Appearance=Appearance.Filled href=@CurrentMissionPath>Current Mission</FluentAnchor>
+        <FluentAnchor class="anchor" Appearance=Appearance.Filled href="/mission-settings">Mission Settings</FluentAnchor>
+        <FluentAnchor class="anchor" Appearance=Appearance.Filled href="/user-settings">User Settings</FluentAnchor>
+        <FluentAnchor class="anchor" href="/about">About</FluentAnchor>
     </div>
     <div style="margin:5px;padding:5px;border:1px solid black;border-radius:5px;flex-grow:1">
         @Body
     </div>
 </div>
+
+<style>
+    .anchor {
+        display: block;
+        width: 100%;
+        height: 50px;
+        border-radius: 5px;
+        outline: none;
+        border: none;
+        background-image: linear-gradient(to right, #32be8f, #38d39f, #32be8f);
+        font-size: 1.2rem;
+        color: #fff;
+        font-family: 'Poppins', sans-serif;
+        text-transform: uppercase;
+        margin: 1rem 0;
+        cursor: pointer;
+        transition: .5s;
+        text-align: center;
+    }
+
+    h2 {
+        color: orangered !important;
+        font-family: 'Poppins', sans-serif !important;
+        text-transform: uppercase !important;
+        font-weight: bold !important;
+    }
+</style>
+
 
 @code {
     public Guid CurrentMissionID { get; set; } = Guid.Empty;

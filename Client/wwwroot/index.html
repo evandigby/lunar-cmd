@@ -8,11 +8,13 @@
     <base href="/" />
     <link href="Client.styles.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
+    <link href="css/style.css" rel="stylesheet" />
     <script src="_content/Microsoft.Authentication.WebAssembly.Msal/AuthenticationService.js"></script>
     <script type="module" src="https://unpkg.com/@fluentui/web-components"></script>
-
-    <link rel="stylesheet"
-          href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
+    <link rel="stylesheet" href="_content/Blazority/lib/clr/ui/clr-ui.min.css" />
+    <link rel="stylesheet" href="_content/Blazority/lib/clr/icons/clr-icons.min.css" />
+    <link rel="stylesheet" href="_content/Blazority/blazority.min.css" />
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 </head>
 
 <body class="ms-Fabric">
@@ -25,6 +27,10 @@
     </div>
 
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_content/Blazority/lib/webcomponents/custom-elements/custom-elements.min.js"></script>
+    <script src="_content/Blazority/lib/clr/icons/clr-icons.min.js"></script>
+    <script src="_content/Blazority/blazority.min.js"></script>
+
     <!--<script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>-->
     <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
 
@@ -110,56 +116,8 @@
                 stop.click();
             },
 
-        };
-
-        //// status fields and start button in UI
-        //var phraseDiv;
-        //var startRecognizeOnceAsyncButton;
-
-        //// subscription key and region for speech services.
-        //var subscriptionKey, serviceRegion;
-        //var SpeechSDK;
-        //var recognizer;
-
-        //function recordOnce() {
-        //    startRecognizeOnceAsyncButton = document.getElementById("startRecognizeOnceAsyncButton");
-        //    subscriptionKey = logEntryViewDotNetReference.invokeMethod('GetSubscriptionKey');
-        //    serviceRegion = logEntryViewDotNetReference.invokeMethod('GetRegion');
-
-        //    startRecognizeOnceAsyncButton.disabled = true;
-
-        //    var speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-
-        //    speechConfig.speechRecognitionLanguage = "en-US";
-        //    var audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-        //    recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-
-        //    recognizer.recognizeOnceAsync(
-        //        function (result) {
-        //            startRecognizeOnceAsyncButton.disabled = false;
-        //            logEntryViewDotNetReference.invokeMethodAsync('RecordingStopped');
-        //            window.console.log(result);
-
-        //            recognizer.close();
-        //            recognizer = undefined;
-        //            logEntryViewDotNetReference.invokeMethodAsync('SpeechToText', result.text);
-        //        },
-        //        function (err) {
-        //            startRecognizeOnceAsyncButton.disabled = false;
-        //            window.console.log(err);
-
-        //            recognizer.close();
-        //            recognizer = undefined;
-        //            logEntryViewDotNetReference.invokeMethodAsync('SpeechToText', err);
-        //        });
-
-        //    if (!!window.SpeechSDK) {
-        //        SpeechSDK = window.SpeechSDK;
-        //        startRecognizeOnceAsyncButton.disabled = false;
-        //    }
-        //}
+        };        
     </script>
-
 </body>
 
 </html>
