@@ -6,15 +6,15 @@
     @if (attachmentData == null)
     {
         <FluentSkeleton>
-            <span><i class="ms-Icon ms-Icon--Blocked"></i></span>
+            <span><i class="ms-Icon ms-Icon--Blocked" style="max-width:5vw;max-height:5vh"></i></span>
         </FluentSkeleton>
     }
     else
     {
         @if (attachmentData.DataURI.StartsWith("data:image/"))
         {
-            <span><i class="ms-Icon ms-Icon--FileImage" @onclick=OnClick></i></span>
-            @*<img class="ms-Icon ms-Icon--FileImage" src=@attachmentData.DataURI style="max-width:5vw;max-height:5vh" @onclick=OnClick />*@
+            @*<span><i class="ms-Icon ms-Icon--FileImage" @onclick=OnClick></i></span>*@
+            <img class="ms-Icon ms-Icon--FileImage" src=@attachmentData.DataURI style="max-width:5vw;max-height:5vh" @onclick=OnClick />
 
             @if (ShowFullSize)
             {
@@ -25,7 +25,7 @@
     }
         else if (attachmentData.DataURI.StartsWith("data:audio/"))
         {
-            <span><i class="ms-Icon ms-Icon--MusicInCollectionFill" @onclick=OnClick></i></span>
+            <span><i class="ms-Icon ms-Icon--MusicInCollectionFill" style="max-width:5vw;max-height:5vh" @onclick=OnClick></i></span>
             @if (ShowFullSize)
             {
                 <div>&lt;Audio Transcript&gt;</div>
@@ -36,7 +36,7 @@
         }
         else
         {
-            <span><i class="ms-Icon ms-Icon--SurveyQuestions" @onclick=OnClick></i></span>
+            <span><i class="ms-Icon ms-Icon--SurveyQuestions" style="max-width:5vw;max-height:5vh" @onclick=OnClick></i></span>
             @if (ShowFullSize)
             {
                 <FluentDialog @onclick=OnClick>
