@@ -13,11 +13,5 @@ namespace Data.Log
         public Guid Id { get; set; }
         public string Name {  get; set; }   
         public string Alt { get; set; }
-        public int TotalParts { get; set; }
-        public int PartsUploaded { get; set; }
-        public string ContentType {  get; set; }
-
-        [JsonIgnore]
-        public bool UploadComplete => PartsUploaded == TotalParts;
     }
 }

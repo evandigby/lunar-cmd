@@ -8,7 +8,7 @@ namespace Data.Commands
     public enum PayloadType
     {
         Plaintext = 0,
-        Binary = 1,
+        BinaryReference = 1,
         None = 2
     }
 }

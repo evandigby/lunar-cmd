@@ -1,4 +1,5 @@
 ﻿using Client.State;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,6 @@ namespace Client.RealTimeCommunication
 {
     public interface IHubConnectionFactory
     {
-        Task<HubConnection> ConnectHub(Action<HubConnection> hubConfigFunc);
+        Task<HubConnection> ConnectHub(IAccessTokenProvider accessTokenProvider, Action<HubConnection> hubConfigFunc);
     }
 }

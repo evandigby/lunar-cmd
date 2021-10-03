@@ -10,6 +10,7 @@ namespace Client.State
             services.AddSingleton(state.Api);
             services.AddSingleton(state.Mission);
             services.AddSingleton(state.User);
+            services.AddSingleton(state.Attachments);
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LunarAPIClient.CommandProcessors
 {
-    internal class NotificationProducingCommandProcessor : INotificationProducer
+    public class NotificationProducingCommandProcessor : INotificationProducer
     {
         private readonly List<Notification> _notifications = new();
         public IEnumerable<Notification> Notifications => _notifications;

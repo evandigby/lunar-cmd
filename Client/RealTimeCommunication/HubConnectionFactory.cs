@@ -1,5 +1,7 @@
 ﻿using Client.State;
 using Data.Converters;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -18,10 +20,18 @@ namespace Client.RealTimeCommunication
             this.apiState = apiState;
         }
 
-        public async Task<HubConnection> ConnectHub(Action<HubConnection> hubConfigFunc)
+        public async Task<HubConnection> ConnectHub(IAccessTokenProvider accessTokenProvider, Action<HubConnection> hubConfigFunc)
         {
             var hubConnection = new HubConnectionBuilder()
-                .WithUrl($"{apiState.BaseAddress}api/{apiState.ApiVersion}/")
+                .WithUrl($"{apiState.BaseAddress}api/{apiState.ApiVersion}/", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        var token = await accessTokenProvider.RequestAccessToken();
+                        return token.TryGetToken(out AccessToken accessToken) ? accessToken.Value : null;
+                    };
+                })
+                .WithAutomaticReconnect()
                 .AddJsonProtocol(options =>
                 {
                     options.PayloadSerializerOptions = ConverterOptions.JsonSerializerOptions;

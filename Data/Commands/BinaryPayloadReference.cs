@@ -7,13 +7,11 @@ using System.Threading.Tasks;
 
 namespace Data.Commands
 {
-    public class BinaryPayloadValue : CommandPayload
+    public class BinaryPayloadReference : CommandPayload
     {
-        public override PayloadType PayloadType => PayloadType.Binary;
+        public override PayloadType PayloadType => PayloadType.BinaryReference;
         public Guid AttachmentId { get; set; }
+        public string AttachmentLink { get; set; }
         public string OriginalFileName { get; set; }
-        public byte[] Value { get; set; }
-        public int PartNumber { get; set; }
-        public int TotalParts { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Data.Log;
+using System.Net;
 using System.Net.Http.Json;
 
 namespace LunarAPIClient
@@ -19,15 +20,30 @@ namespace LunarAPIClient
             return logEntries ?? Enumerable.Empty<LogEntry>();
         }
 
-        public async Task<LogEntryAttachmentData> GetLogEntryAttachment(Guid missionId, Guid logEntryId, LogEntryAttachment attachment, CancellationToken cancellationToken)
+        public async Task<LogEntryAttachmentData?> GetLogEntryAttachment(
+            Guid missionId, 
+            Guid logEntryId, 
+            Guid attachmentId, 
+            CancellationToken cancellationToken)
         {
-            var data = await httpClient.GetByteArrayAsync(GetLogEntryAttachmentUri(missionId, logEntryId, attachment.Id), cancellationToken);
+            var response = await httpClient.GetAsync(GetLogEntryAttachmentUri(missionId, logEntryId, attachmentId), cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return null;
+
+            response.EnsureSuccessStatusCode();
+
+            var data = await response.Content.ReadAsByteArrayAsync(cancellationToken);
 
             var base64attachment = Convert.ToBase64String(data);
+
+            var contentType = response.Content.Headers.ContentType?.MediaType;
+
             return new LogEntryAttachmentData
             {
-                Attachment = attachment,
-                DataURI = $"data:{attachment.ContentType};base64,{base64attachment}"
+                AttachmentId = attachmentId,
+                ContentType = contentType ?? "application/octet-stream",
+                DataURI = $"data:{contentType};base64,{base64attachment}"
             };
         }
 
