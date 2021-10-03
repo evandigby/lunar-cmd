@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace LunarAPIClient.CommandProcessors
 {
-    public class BinaryStreamCommandProcessor : NotificationProducingCommandProcessor
+    public class BinaryStreamCommandProcessor
     {
         private readonly ILogEntryAttachmentRepository logEntryAttachmentRepository;
         private readonly INotificationClient notificationClient;
