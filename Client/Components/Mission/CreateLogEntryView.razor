@@ -16,7 +16,7 @@
                 <i class="ms-Icon ms-Icon--Microphone"></i>
             </FluentButton>
             <FluentButton id="stopRecordingButton" style="flex-shrink: 0;margin:2px" disabled="@notRecording" hidden="@notRecording" @onclick=StopRecording>
-                <i class="ms-Icon ms-Icon--MicOff"></i>
+                <i class="ms-Icon ms-Icon--CircleStop"></i>
             </FluentButton>
         </div>
 
@@ -154,7 +154,11 @@
     }
 
     [JSInvokable]
-    public async Task ResetControl() => ClearInputFile();
+    public async Task ResetControl()
+    {
+        CurrentMission.CurrentEntryText = "";
+        ClearInputFile();
+    }
 
     private async Task Record()
     {
@@ -176,8 +180,6 @@
     {
         recording = false;
         notRecording = true;
-
-        await jsRuntime.InvokeVoidAsync("MyJSMethods.stopRecording");
     }
 
     [JSInvokable]
@@ -188,7 +190,7 @@
     }
 
     [JSInvokable]
-    public string GetAudioCommandEndpoint() => audioCommandClient.GetEndpoint().ToString();
+    public string GetAudioCommandEndpoint() => $"{audioCommandClient.GetEndpoint().ToString()}/{CurrentMission.Id}";
 
     [JSInvokable]
     public string GetSubscriptionKey() => "18d86c7414234aae8cfae7a8ad04c82e";

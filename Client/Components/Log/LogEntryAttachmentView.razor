@@ -20,9 +20,14 @@
                 </FluentDialog>
             }
         }
+        else if (attachmentData.DataURI.StartsWith("data:audio/"))
+        {
+            <div>&lt;Audio Transcript&gt;</div>
+            <audio controls src=@attachmentData.DataURI></audio>
+        }
         else
         {
-            <div>Invalid attachment type</div>
+            <div>Invalid attachment type @attachmentData.DataURI</div>
         }
     }
 </div>

@@ -17,6 +17,15 @@ using System.IO;
 using api.Speech;
 using Data.Log;
 using System.Text;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.Azure.Documents.Client;
+using api.LogEntryRepository;
+using api.NotificationClient;
+using System.Collections.Generic;
+using LunarAPIClient.CommandProcessors;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using api.CommandWriter;
 
 namespace api.REST
 {
@@ -27,9 +36,12 @@ namespace api.REST
 
         [FunctionName("SendAudioCommand")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "audiocommands")] HttpRequest req,
-            [EventHub("%EventHubName%", Connection = "EventHubs")] IAsyncCollector<string> commands,
-            ILogger log,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "audiocommands/{missionId:guid}")] HttpRequest req,
+            [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBCommandsCollectionName%", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> commands,
+            [SignalR(HubName = "%SignalRHubName%", ConnectionStringSetting = "AzureSignalRConnectionString")] IAsyncCollector<SignalRMessage> messages,
+            [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBLogEntriesCollectionName%", ConnectionStringSetting = "CosmosDB")] IAsyncCollector<string> logEntries,
+            [CosmosDB("%CosmosDBDatabaseName%", "%CosmosDBLogEntriesCollectionName%", ConnectionStringSetting = "CosmosDB")] DocumentClient logEntryDocumentClient,
+            Guid missionId, ILogger log,
             CancellationToken cancellationToken)
         {
             User user;
@@ -50,7 +62,6 @@ namespace api.REST
 
                 var attachments = req.Form.Files?.Select(f =>
                 {
-                    var totalBlocks = (int)Math.Ceiling((decimal)f.Length / (decimal)blockSize);
                     return new
                     {
                         file = f,
@@ -58,9 +69,7 @@ namespace api.REST
                         {
                             Id = Guid.NewGuid(),
                             Name = f.Name,
-                            Alt = "Alternate Text",
-                            PartsUploaded = 0,
-                            TotalParts = totalBlocks
+                            Alt = "Alternate Text"
                         },
                     };
                 }).ToList();
@@ -79,39 +88,61 @@ namespace api.REST
                     ReceivedAt = DateTime.UtcNow
                 };
 
-                await LogAndPropagateEntries(entryCmd, commands, cancellationSource, log);
+                var logEntryRepository = new CosmosDBLogEntryRepository(logEntries, logEntryDocumentClient);
+                var signalRNotificationClient = new SignalRNotificationClient(messages);
+                var logEntryAttachmentContentTypeRepository = new FileExtenstionContentTypeProvderLogEntryAttachmentContentTypeRepository();
 
-                if (attachments != null)
+                var exceptions = new List<Exception>();
+                var commandProcessor = new LunarAPIClient.CommandProcessors.CommandProcessor(
+                    logEntryRepository,
+                    signalRNotificationClient,
+                    logEntryAttachmentContentTypeRepository);
+
+                try
                 {
-                    foreach (var attachment in attachments)
+                    await ProcessAndPropagateCommand(entryCmd, commands, commandProcessor, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+                }
+
+                if (exceptions.Any())
+                    throw new AggregateException(exceptions);
+                
+                if (exceptions.Count == 1)
+                    throw exceptions.Single();
+
+                try
+                {
+                    if (attachments != null)
                     {
-                        using Stream input = attachment.file.OpenReadStream();
-
-                        var currentBlock = 1;
-
-                        byte[] buffer = new byte[blockSize];
-                        int bytesRead;
-                        while ((bytesRead = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        using var content = new MultipartFormDataContent();
+                        var attachmentCommands = new List<Command>();
+                        var formFileCollection = new FormFileCollection();
+                        foreach (var attachment in attachments)
                         {
-                            var fileCmd = new UploadAttachmentPartCommand
-                            {
-                                LogEntryId = entryCmd.LogEntryId,
-                                Payload = new BinaryPayloadValue
-                                {
-                                    AttachmentId = attachment.attachment.Id,
-                                    Value = buffer,
-                                    PartNumber = currentBlock++,
-                                    TotalParts = attachment.attachment.TotalParts,
-                                    OriginalFileName = attachment.attachment.Name
-                                },
-                                User = user,
-                                ReceivedAt = DateTime.UtcNow
-                            };
-
-                            await LogAndPropagateEntries(fileCmd, commands, cancellationSource, log);
+                            var file = attachment.file;
+                            var formFile = new FormFile(file.OpenReadStream(), 0, file.Length, attachment.attachment.Id.ToString(), file.Name);
+                            formFile.Headers = file.Headers;
+                            formFile.ContentType = file.ContentType;
+                            formFile.ContentDisposition = file.ContentDisposition;
+                            formFileCollection.Add(formFile);
                         }
+
+                        await SendAttachmentCommand(req, commands, messages, missionId, entryCmd.LogEntryId, formFileCollection, user, cancellationToken);
                     }
                 }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+                }
+
+                if (exceptions.Any())
+                    throw new AggregateException(exceptions);
+
+                if (exceptions.Count == 1)
+                    throw exceptions.Single();
             }
             catch (Exception ex)
             {
@@ -122,6 +153,28 @@ namespace api.REST
             }
 
             return new AcceptedResult();
+        }
+
+        private static async Task<IActionResult> SendAttachmentCommand(HttpRequest req,
+            IAsyncCollector<string> commands,
+            IAsyncCollector<SignalRMessage> messages,
+            Guid missionId, Guid logEntryId, FormFileCollection files, User user,
+            CancellationToken cancellationToken)
+        {
+            var attachmentConnectionString = Environment.GetEnvironmentVariable("AttachmentBlobStorage");
+            var attachmentBlobContainer = Environment.GetEnvironmentVariable("AttachmentBlobContainer");
+
+            var logEntryAttachmentRepository = new AzureBlobStorageLogEntryAttachmentRepository(attachmentConnectionString, attachmentBlobContainer);
+            var signalRNotificationClient = new SignalRNotificationClient(messages);
+            var commandWriter = new AsyncCollectorCommandWriter(commands);
+
+            var processor = new BinaryStreamCommandProcessor(logEntryAttachmentRepository, signalRNotificationClient, commandWriter);
+
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, req.HttpContext.RequestAborted);
+
+            var results = await processor.ProcessCommand(user, missionId, logEntryId, files, cancellationSource.Token).ConfigureAwait(false);
+
+            return new CreatedResult($"api/{missionId}/{logEntryId}/attachments", results);
         }
 
         private static IFormFile ExtractAudioNoteFromRequest(HttpRequest req)
@@ -139,25 +192,15 @@ namespace api.REST
             return audioNote;
         }
 
-        private static async Task LogAndPropagateEntries(Command command, 
+        private static async Task ProcessAndPropagateCommand(Command command, 
                                          IAsyncCollector<string> commands, 
-                                         CancellationTokenSource cancellationSource, 
-                                         ILogger log)
+                                         CommandProcessor commandProcessor,
+                                         CancellationToken cancellationToken)
         {
-            log.LogInformation($"Received {command.Name} command from {command.User.Id} ({command.User.Name})");
-
             try
             {
-                var serialized = command.Serialize();
-                // Ignore too big for now. Later handle better
-                if (Encoding.UTF8.GetByteCount(serialized) < 1024 * 256)
-                {
-                    await commands.AddAsync(serialized, cancellationSource.Token);
-                }
-                else
-                {
-                    log.LogError($"Got too-large message: {Encoding.UTF8.GetByteCount(serialized)}");
-                }
+                await commands.AddAsync(command.Serialize(), cancellationToken);
+                await commandProcessor.ProcessCommand(command, cancellationToken);
             }
             catch (Exception)
             {
@@ -176,6 +219,7 @@ namespace api.REST
             }
 
             var textFromSpeech = await SpeechToTextHelper.RecognizeSpeechFromFileAsync(filePath);
+            File.Delete(filePath);
             return textFromSpeech;
         }
     }
