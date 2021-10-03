@@ -1,5 +1,7 @@
 ﻿@using System.IO
 
+@inject IAudioCommandClient audioCommandClient
+@inject IAccessTokenProvider accessTokenProvider
 @inject ICommandClient commandClient
 @inject IJSRuntime jsRuntime
 
@@ -8,8 +10,11 @@
         <div style="display: flex; flex-direction: row;flex-grow:1;">
             <InputText style="flex-grow:1;margin:2px" @bind-Value=@CurrentMission.CurrentEntryText />
             <FluentButton style="flex-shrink: 0;margin:2px" type="submit" Disabled=inputDisabled>Send</FluentButton>
-            <FluentButton id="startRecognizeOnceAsyncButton" style="flex-shrink: 0;margin:2px" disabled="@recording" @onclick=Record>
+            <FluentButton id="startRecordingButton" style="flex-shrink: 0;margin:2px" disabled="@recording" hidden="@recording" @onclick=StartRecording>
                 <i class="ms-Icon ms-Icon--Microphone"></i>
+            </FluentButton>
+            <FluentButton id="stopRecordingButton" style="flex-shrink: 0;margin:2px" disabled="@notRecording" hidden="@notRecording" @onclick=StopRecording>
+                <i class="ms-Icon ms-Icon--MicOff"></i>
             </FluentButton>
         </div>
 
@@ -152,12 +157,7 @@
     }
 
     [JSInvokable]
-    public async Task SpeechToText(string text)
-    {
-        CurrentMission.CurrentEntryText = text;
-
-        await Enter(editContext: null);
-    }
+    public async Task ResetControl() => ClearInputFile();
 
     private async Task Record()
     {
@@ -165,6 +165,22 @@
         notRecording = false;
 
         await jsRuntime.InvokeVoidAsync("MyJSMethods.startRecordingOnce");
+    }
+
+    private async Task StartRecording()
+    {
+        recording = true;
+        notRecording = false;
+
+        await jsRuntime.InvokeVoidAsync("MyJSMethods.startRecording");
+    }
+
+    private async Task StopRecording()
+    {
+        recording = false;
+        notRecording = true;
+
+        await jsRuntime.InvokeVoidAsync("MyJSMethods.stopRecording");
     }
 
     [JSInvokable]
@@ -175,8 +191,18 @@
     }
 
     [JSInvokable]
+    public string GetAudioCommandEndpoint() => audioCommandClient.GetEndpoint().ToString();
+
+    [JSInvokable]
     public string GetSubscriptionKey() => "18d86c7414234aae8cfae7a8ad04c82e";
 
     [JSInvokable]
     public string GetRegion() => "australiaeast";
+
+    [JSInvokable]
+    public async Task<string> GetAccessToken() 
+    {
+        var token = await accessTokenProvider.RequestAccessToken();
+        return token.TryGetToken(out AccessToken accessToken) ? accessToken.Value : String.Empty;
+    }
 }

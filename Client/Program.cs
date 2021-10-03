@@ -39,6 +39,7 @@ builder.Services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().
 
 builder.Services.AddTransient<ILogEntryClient, LogEntryClient>();
 builder.Services.AddTransient<ICommandClient, CommandClient>();
+builder.Services.AddTransient<IAudioCommandClient, AudioCommandClient>();
 builder.Services.AddTransient<IHubConnectionFactory, HubConnectionFactory>();
 builder.Services.AddTransient<IUserClient, UserClient>();
 

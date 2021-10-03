@@ -25,11 +25,72 @@
     </div>
 
     <script src="_framework/blazor.webassembly.js"></script>
-    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+    <!--<script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>-->
+    <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
 
     <script>
 
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
         let logEntryViewDotNetReference;
+        
+        let onError = function (err) {
+            console.log('The following error occured: ' + err);
+        };
+
+        let stop = document.getElementById("stopRecordingButton");
+
+        let onSuccess = function (stream) {
+            let recorder;
+            let context;
+            
+            let apiEndpoint = logEntryViewDotNetReference.invokeMethod('GetAudioCommandEndpoint');
+
+            if (stop === null)
+                stop = document.getElementById("stopRecordingButton");
+
+            context = new AudioContext();
+            let mediaStreamSource = context.createMediaStreamSource(stream);
+            recorder = new Recorder(mediaStreamSource);
+            recorder.record();
+
+            let accessToken = "";
+            logEntryViewDotNetReference.invokeMethodAsync('GetAccessToken')
+                .then(value => {
+                    accessToken = value;
+                });
+            
+            stop.onclick = function () {
+                recorder.stop();
+                recorder.exportWAV(function (s) {
+                    wav = window.URL.createObjectURL(s);
+                    let filename = new Date().toISOString().replaceAll(':', "");
+                    let fd = new FormData();
+                    fd.append("file", s, filename);
+                    let xhr = new XMLHttpRequest();
+                    xhr.addEventListener("load", transferComplete);
+                    xhr.addEventListener("error", transferFailed)
+                    xhr.addEventListener("abort", transferFailed)
+                    xhr.open("POST", apiEndpoint, true);
+                    xhr.setRequestHeader("Authorization", "Bearer " + accessToken)
+                    xhr.send(fd);
+                });
+
+                stop.disabled = true;
+                function transferComplete(evt) {
+                    console.log("The transfer is complete.");
+                    logEntryViewDotNetReference.invokeMethod('ResetControl');
+                }
+
+                function transferFailed(evt) {
+                    console.log("An error occurred while transferring the file.");
+                    console.log(evt.status);
+                    logEntryViewDotNetReference.invokeMethod('ResetControl');
+                }
+
+            }
+        }
 
         window.MyJSMethods = {
 
@@ -37,58 +98,66 @@
                 logEntryViewDotNetReference = element;
             },
 
-            startRecordingOnce: function () {
-                recordOnce();
-            }
+            //startRecordingOnce: function () {
+            //    recordOnce();
+            //},
+
+            startRecording: function () {
+                navigator.getUserMedia({ audio: true }, onSuccess, onError);
+            },
+
+            stopRecording: function () {
+                stop.click();
+            },
 
         };
 
-        // status fields and start button in UI
-        var phraseDiv;
-        var startRecognizeOnceAsyncButton;
+        //// status fields and start button in UI
+        //var phraseDiv;
+        //var startRecognizeOnceAsyncButton;
 
-        // subscription key and region for speech services.
-        var subscriptionKey, serviceRegion;
-        var SpeechSDK;
-        var recognizer;
+        //// subscription key and region for speech services.
+        //var subscriptionKey, serviceRegion;
+        //var SpeechSDK;
+        //var recognizer;
 
-        function recordOnce() {
-            startRecognizeOnceAsyncButton = document.getElementById("startRecognizeOnceAsyncButton");
-            subscriptionKey = logEntryViewDotNetReference.invokeMethod('GetSubscriptionKey'); 
-            serviceRegion = logEntryViewDotNetReference.invokeMethod('GetRegion'); 
+        //function recordOnce() {
+        //    startRecognizeOnceAsyncButton = document.getElementById("startRecognizeOnceAsyncButton");
+        //    subscriptionKey = logEntryViewDotNetReference.invokeMethod('GetSubscriptionKey');
+        //    serviceRegion = logEntryViewDotNetReference.invokeMethod('GetRegion');
 
-            startRecognizeOnceAsyncButton.disabled = true;
+        //    startRecognizeOnceAsyncButton.disabled = true;
 
-            var speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+        //    var speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
 
-            speechConfig.speechRecognitionLanguage = "en-US";
-            var audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-            recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+        //    speechConfig.speechRecognitionLanguage = "en-US";
+        //    var audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+        //    recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
-            recognizer.recognizeOnceAsync(
-                function (result) {
-                    startRecognizeOnceAsyncButton.disabled = false;
-                    logEntryViewDotNetReference.invokeMethodAsync('RecordingStopped');
-                    window.console.log(result);
+        //    recognizer.recognizeOnceAsync(
+        //        function (result) {
+        //            startRecognizeOnceAsyncButton.disabled = false;
+        //            logEntryViewDotNetReference.invokeMethodAsync('RecordingStopped');
+        //            window.console.log(result);
 
-                    recognizer.close();
-                    recognizer = undefined;
-                    logEntryViewDotNetReference.invokeMethodAsync('SpeechToText', result.text);
-                },
-                function (err) {
-                    startRecognizeOnceAsyncButton.disabled = false;
-                    window.console.log(err);
+        //            recognizer.close();
+        //            recognizer = undefined;
+        //            logEntryViewDotNetReference.invokeMethodAsync('SpeechToText', result.text);
+        //        },
+        //        function (err) {
+        //            startRecognizeOnceAsyncButton.disabled = false;
+        //            window.console.log(err);
 
-                    recognizer.close();
-                    recognizer = undefined;
-                    logEntryViewDotNetReference.invokeMethodAsync('SpeechToText', err);
-                });
+        //            recognizer.close();
+        //            recognizer = undefined;
+        //            logEntryViewDotNetReference.invokeMethodAsync('SpeechToText', err);
+        //        });
 
-            if (!!window.SpeechSDK) {
-                SpeechSDK = window.SpeechSDK;
-                startRecognizeOnceAsyncButton.disabled = false;
-            }
-        }
+        //    if (!!window.SpeechSDK) {
+        //        SpeechSDK = window.SpeechSDK;
+        //        startRecognizeOnceAsyncButton.disabled = false;
+        //    }
+        //}
     </script>
 
 </body>
