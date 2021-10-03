@@ -23,44 +23,18 @@ namespace api.LogEntryRepository
             this.blobContainerClient = new BlobContainerClient(azureStorageConnectionString, containerName);
         }
 
-        public async Task<bool> UploadAttachmentPart(Guid missionId, Guid logEntryId, BinaryPayloadValue binaryPayloadValue, string contentType, CancellationToken cancellationToken)
+        public async Task UploadAttachment(Guid missionId, Guid logEntryId, Guid attachmentId, Stream attachment, string contentType, CancellationToken cancellationToken)
         {
-            var blockBlobClient = blobContainerClient.GetBlockBlobClient(BlobPath(missionId, logEntryId, binaryPayloadValue.AttachmentId));
+            var blobClient = blobContainerClient.GetBlobClient(BlobPath(missionId, logEntryId, attachmentId));
 
-            using var ms = new MemoryStream(binaryPayloadValue.Value);
-
-            await blockBlobClient.StageBlockAsync(
-                BlockId(binaryPayloadValue.PartNumber), 
-                ms, 
-                cancellationToken: cancellationToken);
-
-            var blockList = await blockBlobClient.GetBlockListAsync(cancellationToken: cancellationToken);
-
-            if (blockList?.Value?.UncommittedBlocks?.Count() < binaryPayloadValue.TotalParts)
-                return false;
-
-            var ordered = blockList.Value.UncommittedBlocks.OrderBy(b => BlockNumFromId(b.Name));
-
-            var nums = ordered.Select(b => BlockNumFromId(b.Name)).ToArray();
-
-            await blockBlobClient.CommitBlockListAsync(
-                blockList.Value.UncommittedBlocks.OrderBy(b => BlockNumFromId(b.Name)).Select(b => b.Name),
-                httpHeaders: new BlobHttpHeaders
+            await blobClient.UploadAsync(attachment, new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders
                 {
                     ContentType = contentType
-                },
-                cancellationToken: cancellationToken);
-
-            return true;
-        }
-
-        public static int BlockNumFromId(string base64Id)
-        {
-            return BitConverter.ToInt32(Convert.FromBase64String(base64Id).Take(sizeof(int)).ToArray());
-        }
-        public static string BlockId(int partNum)
-        {
-            return Convert.ToBase64String(BitConverter.GetBytes(partNum).Concat(Guid.NewGuid().ToByteArray()).ToArray());
+                }
+            },
+            cancellationToken).ConfigureAwait(false);
         }
 
         public static string BlobPath(Guid missionId, Guid logEntryId, Guid attachmentId)

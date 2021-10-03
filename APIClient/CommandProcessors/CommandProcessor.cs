@@ -16,18 +16,15 @@ namespace LunarAPIClient.CommandProcessors
     {
         private readonly ILogEntryRepository _logEntryRepository;
         private readonly INotificationClient _notificationClient;
-        private readonly ILogEntryAttachmentRepository _logEntryAttachmentRepository;
         private readonly ILogEntryAttachmentContentTypeRepository _logEntryAttachmentContentTypeRepository;
 
         public CommandProcessor(
             ILogEntryRepository logEntryRepository,
             INotificationClient notificationClient,
-            ILogEntryAttachmentRepository logEntryAttachmentRepository, 
             ILogEntryAttachmentContentTypeRepository logEntryAttachmentContentTypeRepository)
         {
             _logEntryRepository = logEntryRepository;
             _notificationClient = notificationClient;
-            _logEntryAttachmentRepository = logEntryAttachmentRepository;
             _logEntryAttachmentContentTypeRepository = logEntryAttachmentContentTypeRepository;
         }
 
@@ -41,12 +38,6 @@ namespace LunarAPIClient.CommandProcessors
             else if (cmd is UpdateLogEntryCommand)
             {
                 processor = new UpdateLogEntryCommandProcessor(_logEntryRepository);
-            }
-            else if (cmd is UploadAttachmentPartCommand)
-            {
-                processor = new UploadAttachmentPartCommandProcessor(
-                    _logEntryAttachmentRepository,
-                    _logEntryAttachmentContentTypeRepository);
             }
             else
             {

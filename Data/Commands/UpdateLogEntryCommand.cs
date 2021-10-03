@@ -10,10 +10,8 @@ namespace Data.Commands
     {
         public Guid LogEntryId {  get; set; }
 
-        public UpdateLogEntryCommand() {
-            Name = nameof(UpdateLogEntryCommand);
-        }
-
         public override CommandType CommandType => CommandType.UpdateLogItem;
+        public override string Name => nameof(UpdateLogEntryCommand);
+
     }
 }

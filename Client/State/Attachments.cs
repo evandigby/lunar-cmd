@@ -11,7 +11,7 @@ namespace Client.State
     {
         private readonly ConcurrentDictionary<Guid, LogEntryAttachmentData> attachments = new();
 
-        public async Task UpdateLogEntryProgress(LogEntryAttachmentPartUploadComplete progress, ILogEntryClient client, CancellationToken cancellationToken)
+        public async Task UpdateLogEntryProgress(LogEntryAttachmentUploadComplete progress, ILogEntryClient client, CancellationToken cancellationToken)
         {
             if (attachments.ContainsKey(progress.AttachmentId))
                 return;

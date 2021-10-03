@@ -9,13 +9,10 @@ namespace Data.Commands
 {
     public class AppendLogEntryCommand : Command
     {
-        public AppendLogEntryCommand() {
-            Name = nameof(AppendLogEntryCommand);
-        }
-
         public Guid LogEntryId { get; set; }
         public List<LogEntryAttachment> Attachments { get; set; }
 
         public override CommandType CommandType => CommandType.AppendLogItem;
+        public override string Name => nameof(UpdateLogEntryCommand);
     }
 }

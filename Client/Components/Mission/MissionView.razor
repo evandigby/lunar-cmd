@@ -53,7 +53,7 @@
                         StateHasChanged();
                     });
 
-                    hub.On<LogEntryAttachmentPartUploadComplete>(NotificationCommands.LogEntryAttachmentUploadComplete, async uploadProgress =>
+                    hub.On<LogEntryAttachmentUploadComplete>(NotificationCommands.LogEntryAttachmentUploadComplete, async uploadProgress =>
                     {
                         var src = new CancellationTokenSource();
                         await Attachments.UpdateLogEntryProgress(uploadProgress, logEntryClient, src.Token);

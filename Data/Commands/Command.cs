@@ -18,7 +18,7 @@ namespace Data.Commands
         public Guid MissionId {  get; set; }
         public Guid Id { get; set; }
         public User User { get; set; }
-        public string Name { get; set; }
+        public abstract string Name { get; }
         public DateTime CreatedAt { get; set; }
         public DateTime ReceivedAt { get; set; }
         public abstract CommandType CommandType { get; }
