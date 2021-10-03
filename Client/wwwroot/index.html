@@ -14,9 +14,10 @@
     <link rel="stylesheet" href="_content/Blazority/lib/clr/ui/clr-ui.min.css" />
     <link rel="stylesheet" href="_content/Blazority/lib/clr/icons/clr-icons.min.css" />
     <link rel="stylesheet" href="_content/Blazority/blazority.min.css" />
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 </head>
 
-<body>
+<body class="ms-Fabric">
     <div id="app">Loading...</div>
 
     <div id="blazor-error-ui">
@@ -24,10 +25,99 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/Blazority/lib/webcomponents/custom-elements/custom-elements.min.js"></script>
     <script src="_content/Blazority/lib/clr/icons/clr-icons.min.js"></script>
     <script src="_content/Blazority/blazority.min.js"></script>
+
+    <!--<script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>-->
+    <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
+
+    <script>
+
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+        let logEntryViewDotNetReference;
+        
+        let onError = function (err) {
+            console.log('The following error occured: ' + err);
+        };
+
+        let stop = document.getElementById("stopRecordingButton");
+
+        let onSuccess = function (stream) {
+            let recorder;
+            let context;
+            
+            let apiEndpoint = logEntryViewDotNetReference.invokeMethod('GetAudioCommandEndpoint');
+
+            if (stop === null)
+                stop = document.getElementById("stopRecordingButton");
+
+            context = new AudioContext();
+            let mediaStreamSource = context.createMediaStreamSource(stream);
+            recorder = new Recorder(mediaStreamSource);
+            recorder.record();
+
+            let accessToken = "";
+            logEntryViewDotNetReference.invokeMethodAsync('GetAccessToken')
+                .then(value => {
+                    accessToken = value;
+                });
+            
+            stop.onclick = function () {
+                recorder.stop();
+                recorder.exportWAV(function (s) {
+                    wav = window.URL.createObjectURL(s);
+                    let filename = new Date().toISOString().replaceAll(':', "");
+                    let fd = new FormData();
+                    fd.append("file", s, filename);
+                    let xhr = new XMLHttpRequest();
+                    xhr.addEventListener("load", transferComplete);
+                    xhr.addEventListener("error", transferFailed)
+                    xhr.addEventListener("abort", transferFailed)
+                    xhr.open("POST", apiEndpoint, true);
+                    xhr.setRequestHeader("Authorization", "Bearer " + accessToken)
+                    xhr.send(fd);
+                });
+
+                stop.disabled = true;
+                function transferComplete(evt) {
+                    console.log("The transfer is complete.");
+                    logEntryViewDotNetReference.invokeMethod('ResetControl');
+                }
+
+                function transferFailed(evt) {
+                    console.log("An error occurred while transferring the file.");
+                    console.log(evt.status);
+                    logEntryViewDotNetReference.invokeMethod('ResetControl');
+                }
+
+            }
+        }
+
+        window.MyJSMethods = {
+
+            initializeObjectReference: function (element) {
+                logEntryViewDotNetReference = element;
+            },
+
+            //startRecordingOnce: function () {
+            //    recordOnce();
+            //},
+
+            startRecording: function () {
+                navigator.getUserMedia({ audio: true }, onSuccess, onError);
+            },
+
+            stopRecording: function () {
+                stop.click();
+            },
+
+        };        
+    </script>
 </body>
 
 </html>
