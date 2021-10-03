@@ -1,17 +1,48 @@
 ﻿@inherits LayoutComponentBase
 
-<div style="position:absolute;width:99.9vw;height:99.5vh;overflow:hidden;display:flex;flex-direction:row;">
-    <div style="margin:5px;padding:5px;border: 1px solid black;border-radius:5px;display:flex;flex-direction:column;flex-grow:0">
-        <h2>One Giant Leap - Lunar C&C</h2>
-        <FluentAnchor class="anchor" Appearance=Appearance.Filled href=@CurrentMissionPath>Current Mission</FluentAnchor>
-        <FluentAnchor class="anchor" Appearance=Appearance.Filled href="/mission-settings">Mission Settings</FluentAnchor>
-        <FluentAnchor class="anchor" Appearance=Appearance.Filled href="/user-settings">User Settings</FluentAnchor>
-        <FluentAnchor class="anchor" href="/about">About</FluentAnchor>
-    </div>
-    <div style="margin:5px;padding:5px;border:1px solid black;border-radius:5px;flex-grow:1">
+<MainContainer>
+    <HeaderRegion>
+        <Header>
+            <BrandingRegion>
+                <Branding>
+                    <CustomIcon>
+                        <Icon Shape="moon" Solid="true" />
+                    </CustomIcon>
+                    <ChildContent>ONE GIANT LEAP - LUNAR C&C</ChildContent>
+                </Branding>
+            </BrandingRegion>
+            <Actions>
+                <NavItem Icon="user" href="/authentication/login">
+                </NavItem>
+            </Actions>
+        </Header>
+    </HeaderRegion>
+    <SideNavigationRegion>
+        <VerticalNav HasIcons="true">
+            <NavItem Icon="users">
+                <a href=@CurrentMissionPath>Current Mission</a>
+            </NavItem>
+            <NavItem Icon="file-settings">
+                <ChildContent>
+                    <a href="/mission-settings">Mission Settings</a>
+                </ChildContent>
+            </NavItem>
+            <NavItem Icon="user">
+                <ChildContent>
+                    <a href="/user-settings">User Settings</a>
+                </ChildContent>
+            </NavItem>
+            <NavItem Icon="info-standard">
+                <ChildContent>
+                    <a href="/about">About</a>
+                </ChildContent>
+            </NavItem>
+        </VerticalNav>
+    </SideNavigationRegion>
+    <ContentArea>
         @Body
-    </div>
-</div>
+    </ContentArea>
+</MainContainer>
 
 <style>
     .anchor {
@@ -30,6 +61,9 @@
         cursor: pointer;
         transition: .5s;
         text-align: center;
+    }
+    .anchor:hover {
+        background-image: linear-gradient(to right, #9ecea5, #9edea0, #9ecea5);
     }
 
     h2 {
