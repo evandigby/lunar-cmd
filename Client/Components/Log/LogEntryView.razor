@@ -28,16 +28,18 @@
         <div style="display:flex;flex-direction: row;align-content:center">
             @if (Editing)
             {
-                <FluentButton style="margin: 2px;" @onclick="Update">Update</FluentButton>
+                <FluentButton style="margin: 2px;" @onclick="Update">
+                    <span><i class="ms-Icon ms-Icon--Accept"></i></span>
+                </FluentButton>
             }
             <FluentButton style="margin: 2px" @onclick="ToggleEdit">
                 @if (Editing)
                 {
-                    <span>Cancel</span>
+                    <span><i class="ms-Icon ms-Icon--Cancel"></i></span>
                 }
                 else
                 {
-                    <span>Edit</span>
+                    <span><i class="ms-Icon ms-Icon--EditNote"></i></span>
                 }
             </FluentButton>
 

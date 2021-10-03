@@ -5,13 +5,16 @@
 <div style="flex-grow:0;flex-shrink:0;padding:2px;">
     @if (attachmentData == null)
     {
-        <FluentSkeleton style="width:100px;height:100px" />
+        <FluentSkeleton>
+            <span><i class="ms-Icon ms-Icon--Blocked" style="max-width:5vw;max-height:5vh"></i></span>
+        </FluentSkeleton>
     }
     else
     {
         @if (attachmentData.DataURI.StartsWith("data:image/"))
         {
-            <img src=@attachmentData.DataURI style="max-width:5vw;max-height:5vh" @onclick=OnClick />
+            @*<span><i class="ms-Icon ms-Icon--FileImage" @onclick=OnClick></i></span>*@
+            <img class="ms-Icon ms-Icon--FileImage" src=@attachmentData.DataURI style="max-width:5vw;max-height:5vh" @onclick=OnClick />
 
             @if (ShowFullSize)
             {
@@ -19,15 +22,27 @@
                     <img sytle="object-fit:contain;" src=@attachmentData.DataURI @onclick=OnClick />
                 </FluentDialog>
             }
-        }
+    }
         else if (attachmentData.DataURI.StartsWith("data:audio/"))
         {
-            <div>&lt;Audio Transcript&gt;</div>
-            <audio controls src=@attachmentData.DataURI></audio>
+            <span><i class="ms-Icon ms-Icon--MusicInCollectionFill" style="max-width:5vw;max-height:5vh" @onclick=OnClick></i></span>
+            @if (ShowFullSize)
+            {
+                <div>&lt;Audio Transcript&gt;</div>
+                <FluentDialog @onclick=OnClick>
+                    <audio controls src=@attachmentData.DataURI></audio>
+                </FluentDialog>
+            }
         }
         else
         {
-            <div>Invalid attachment type</div>
+            <span><i class="ms-Icon ms-Icon--SurveyQuestions" style="max-width:5vw;max-height:5vh" @onclick=OnClick></i></span>
+            @if (ShowFullSize)
+            {
+                <FluentDialog @onclick=OnClick>
+                    <div><h3>Invalid attachment type</h3></div>
+                </FluentDialog>
+            }            
         }
     }
 </div>
