@@ -8,7 +8,7 @@
                     <BrandingRegion>
                         <Branding>
                             <CustomIcon>
-                                <Icon Shape="moon" Solid="true" />
+                                <img src="img/oneGiantLeap.svg" alt="Logo" style="padding:4px;height:5vh;">
                             </CustomIcon>
                             <ChildContent>ONE GIANT LEAP - LUNAR C&C</ChildContent>
                         </Branding>
@@ -62,4 +62,5 @@
     public Guid CurrentMissionID { get; set; } = Guid.Empty;
 
     private string CurrentMissionPath => $"/mission/{CurrentMissionID}";
+
 }

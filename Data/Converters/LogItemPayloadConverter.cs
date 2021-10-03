@@ -17,8 +17,9 @@ namespace Data.Converters
         {
             return type switch
             {
-                PayloadType.Plaintext => JsonSerializer.Deserialize<PlaintextPayloadValue>(document.RootElement.GetRawText(), options),
-                PayloadType.BinaryReference => JsonSerializer.Deserialize<BinaryPayloadReference>(document.RootElement.GetRawText(), options),
+                PayloadType.Plaintext => JsonSerializer.Deserialize<PlaintextPayload>(document.RootElement.GetRawText(), options),
+                PayloadType.BinaryReference => JsonSerializer.Deserialize<BinaryReferencePayload>(document.RootElement.GetRawText(), options),
+                PayloadType.Empty => JsonSerializer.Deserialize<EmptyPayload>(document.RootElement.GetRawText(), options),
                 _ => throw new JsonException(),
             };
         }
