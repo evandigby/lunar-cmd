@@ -19,7 +19,7 @@
         <FluentTabs>
             @foreach (var log in CurrentMission.Logs)
             {
-                <FluentTab>@log.Name</FluentTab>
+                <FluentTab style="color: orangered !important">@log.Name</FluentTab>
                 <FluentTabPanel><LogView CurrentLog=@log /></FluentTabPanel>
             }
         </FluentTabs>
