@@ -65,7 +65,7 @@
         {
             <FluentDivider />
             @historicalEntry.UpdatedAt
-            <LogEntryView Value=historicalEntry CanEdit=false />
+            <LogEntryView Value=historicalEntry IsHistory=true />
         }
     }
 </div>
@@ -75,8 +75,12 @@
 
     [Parameter]
     public bool Editing { get; set; } = false;
+    [Parameter]
+    public bool IsHistory { get; set; } = false;
+
     public bool ShowHistory { get; set; } = false;
-    public bool CanEdit => Value.User.Id.Equals(state.User.Id) && !Value.IsFinalized;
+    
+    public bool CanEdit => Value.User.Id.Equals(state.User.Id) && !Value.IsFinalized && !IsHistory;
 
     IEditableLogEntryView? updateableLogEntryView = null;
 
