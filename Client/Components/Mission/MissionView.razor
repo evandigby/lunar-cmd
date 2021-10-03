@@ -19,7 +19,7 @@
         <FluentTabs>
             @foreach (var log in CurrentMission.Logs)
             {
-                <FluentTab>@log.Name</FluentTab>
+                <FluentTab style="color: orangered !important">@log.Name</FluentTab>
                 <FluentTabPanel><LogView CurrentLog=@log /></FluentTabPanel>
             }
         </FluentTabs>
@@ -97,6 +97,9 @@
 
             foreach (var entry in entries)
             {
+                if (entry.Attachments?.Any() != true)
+                    continue;
+
                 foreach (var attachment in entry.Attachments)
                 {
                     if (Attachments.Get(attachment.Id) != null)
