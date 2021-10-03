@@ -2,40 +2,23 @@
 
 @attribute [Authorize]
 
-<fluent-data-grid id="test" generate-header="none" grid-template-columns="15% 15% 60%">
-    <fluent-data-grid-row row-type="sticky-header">
-        <fluent-data-grid-cell cell-type="columnheader" grid-column="1">Logged At</fluent-data-grid-cell>
-        <fluent-data-grid-cell cell-type="columnheader" grid-column="2">Logged By</fluent-data-grid-cell>
-        <fluent-data-grid-cell cell-type="columnheader" grid-column="3">Log Entry</fluent-data-grid-cell>
-    </fluent-data-grid-row>
-    @foreach (var entry in CurrentLog.LogEntries)
-    {
-        if (entry == null)
-        {
-            throw new Exception("should not have a completely null entry");
-        }
+<Datagrid Items="CurrentLog.LogEntries.ToList<LogEntry>()">
+    <DatagridColumn Title="Logged At" TRowData="LogEntry" Field="c => c.UpdatedAt" CanSort="true" />
+    <DatagridColumn Title="Logged By" TRowData="LogEntry" Field="c => c.User.Id" CanSort="true" />
+    <DatagridColumn Title="Log Entry" TRowData="LogEntry" Field="c => c" CanSort="true" />
 
-        var canEdit = state.User.Id == entry.User.Id;
-
-        <fluent-data-grid-row>
-            <fluent-data-grid-cell grid-column="1">
-                @entry.LoggedAt
-                @if (entry.IsEdited)
-                {
-                    <FluentDivider />
-                    <i>Edited on @entry?.UpdatedAt</i>
-                }
-            </fluent-data-grid-cell>
-            <fluent-data-grid-cell grid-column="2">@entry.User?.Name</fluent-data-grid-cell>
-            <fluent-data-grid-cell grid-column="3">
-                <LogEntryView Value=@entry CanEdit=canEdit />
-            </fluent-data-grid-cell>
-        </fluent-data-grid-row>
-    }
-</fluent-data-grid>
+    <DatagridFooter TRowData="LogEntry">
+        <DatagridPagination @ref="Paginator" TRowData="LogEntry" PageSize="10" PageSizes="new int[] { 1, 3, 5, 10, 20, 30 }" PageSizeLabel="Log entries per page">
+            @(Paginator.Pager.StartIndex + 1) - @(Paginator.Pager.EndIndex + 1) of @(Paginator.Pager.ItemCount) log entries
+        </DatagridPagination>
+    </DatagridFooter>
+</Datagrid>
 
 @code {
+    public DatagridPagination<LogEntry> Paginator;
+
     [Parameter]
+
     public Log CurrentLog { get; set; } = new();
 }
 
