@@ -8,7 +8,7 @@
                     <BrandingRegion>
                         <Branding>
                             <CustomIcon>
-                                <img src="img/oneGiantLeap.svg" alt="Logo" style="padding:4px;height:5vh;">
+                                <img src="img/oneGiantLeap.svg" alt="Logo" style="margin-right:20px;height:5vh;width:5vh;">
                             </CustomIcon>
                             <ChildContent>ONE GIANT LEAP - LUNAR C&C</ChildContent>
                         </Branding>
@@ -22,21 +22,21 @@
             <SideNavigationRegion>
                 <VerticalNav HasIcons="true">
                     <NavItem Icon="users">
-                        <a href=@CurrentMissionPath>Current Mission</a>
+                        <a style="text-decoration: none;" href=@CurrentMissionPath>Current Mission</a>
                     </NavItem>
                     <NavItem Icon="file-settings">
                         <ChildContent>
-                            <a href="/mission-settings">Mission Settings</a>
+                            <a style="text-decoration: none;" href="/mission-settings">Mission Settings</a>
                         </ChildContent>
                     </NavItem>
                     <NavItem Icon="user">
                         <ChildContent>
-                            <a href="/user-settings">User Settings</a>
+                            <a style="text-decoration: none;" href="/user-settings">User Settings</a>
                         </ChildContent>
                     </NavItem>
                     <NavItem Icon="info-standard">
                         <ChildContent>
-                            <a href="/about">About</a>
+                            <a style="text-decoration: none;" href="/about">About</a>
                         </ChildContent>
                     </NavItem>
                 </VerticalNav>
@@ -51,16 +51,8 @@
     </NotAuthorized>
 </AuthorizeView>
 
-<style>
-    a {
-        text-decoration: none;
-    }
-</style>
-
-
 @code {
     public Guid CurrentMissionID { get; set; } = Guid.Empty;
 
     private string CurrentMissionPath => $"/mission/{CurrentMissionID}";
-
 }

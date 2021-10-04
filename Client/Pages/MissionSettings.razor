@@ -1,4 +1,8 @@
-﻿@page "/mission-settings"
+﻿@inject StateContainer state
+@inject IUserClient userClient
+
+
+@page "/mission-settings"
 
 <Card>
     <CardHeader>
@@ -10,6 +14,10 @@
                     <DescriptionTitle>Mission Summary:</DescriptionTitle>
                         <DescriptionText>Perform maintenance on Artemis base infrastructure and collect lunar soil samples.</DescriptionText>
                 </CardMediaBlock>
+                <CardBlock>
+                    <CardText>Assigned Members:</CardText>
+                    <CardText>@state.User.Name</CardText>
+                </CardBlock>
                 <CardBlock>
                     <CardText>Custom Data Entry Types: </CardText>
                     <Tree>
@@ -61,6 +69,21 @@
 </Card>
 
 @code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+            var src = new CancellationTokenSource();
+
+            state.UpdateUser(await userClient.Me(src.Token));
+
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
     private DemoModel model = new DemoModel();
 
     private string[] dataTypes = new string[] { "String", "Number", "Boolean" };
