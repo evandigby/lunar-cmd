@@ -85,6 +85,8 @@
                 };
             }).ToList();
 
+        selectedFiles = null;
+
         var entryCmd = new AppendLogEntryCommand
             {
                 LogEntryId = Guid.NewGuid(),
