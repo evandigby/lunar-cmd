@@ -1,0 +1,44 @@
+﻿@inject StateContainer state
+@inject IUserClient userClient
+
+
+@page "/user-settings"
+
+
+<Card>
+    <CardHeader>
+        @state.User.Name
+    </CardHeader>
+        <CardBody>
+            <CardBlock>
+                <CardMediaBlock ImageSource="img/oneGiantMoon.svg" AlternateText="profile-image">
+                    <DescriptionTitle>User Information:</DescriptionTitle>
+                        <DescriptionText>
+                            Assigned Mission - Artemis 1<br />
+                            Seat - 02
+                        </DescriptionText>
+                </CardMediaBlock>
+                <CardBlock>
+                    <CardText>Current Task:</CardText>
+                    <CardText>Collect lunar soil samples and update logs with progress</CardText>
+                </CardBlock>
+            </CardBlock>
+        </CardBody>
+</Card>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+            var src = new CancellationTokenSource();
+
+            state.UpdateUser(await userClient.Me(src.Token));
+
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}
